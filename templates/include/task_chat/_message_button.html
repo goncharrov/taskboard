@@ -1,0 +1,13 @@
+<button
+    type="button"
+    class="btn btn-sm btn-outline-primary"
+    data-bs-toggle="collapse"
+    data-bs-target="#message_collapse"
+    aria-expanded="false"
+    aria-controls="message_collapse"
+    {% if is_task_closed == True  %}
+    disabled
+    {% endif %}
+    >
+    Написать комментарий
+</button>

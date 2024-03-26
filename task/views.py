@@ -480,6 +480,8 @@ def get_tasks(request):
 
         selection_form = SelectionTasksForm()
 
+        print(selection_form)
+
         # Установим фильтры на селекторы
 
         workspace_list = Selection_Utils.get_user_workspaces_list(request.user)
@@ -505,7 +507,7 @@ def get_tasks(request):
             tasks_table = Task_Utils.get_tasks_table(request.user.id, tasks_members_qs)
             tasks_table.sort(key=lambda dictionary: dictionary['created_at'], reverse=True)
 
-        context = {'selection': selection_form, 'tasks': tasks_table}
+        context = {'selection': selection_form, 'tasks': tasks_table}        
 
         return render(request, 'task/task_list.html', context)
 

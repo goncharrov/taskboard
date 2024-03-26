@@ -1,0 +1,45 @@
+:root {
+    --bd-purple: #4c0bce;
+    --bd-violet: #712cf9;
+    --bd-accent: #ffe484;
+    --bd-violet-rgb: 112.520718, 44.062154, 249.437846;
+    --bd-accent-rgb: 255, 228, 132;
+    --bd-pink-rgb: 214, 51, 132;
+    --bd-teal-rgb: 32, 201, 151;
+    --docsearch-primary-color: var(--bd-violet);
+    --docsearch-logo-color: var(--bd-violet);
+}
+
+pre {
+    white-space:pre-wrap;
+    font-size: 14px;
+    font-family: Montserrat;
+}
+
+body {
+    font-size: .875rem;
+    min-width: 320px;
+  }
+
+.taskboard_content {
+    margin-left: 212px;
+}
+
+@media (min-width: 992px) {
+    .taskboard_sidebar {
+        margin-left: 0;
+    }
+    .taskboard_content {
+        width: calc(100% - 212px);
+    }
+}
+
+@media (max-width: 991.98px) {
+    .taskboard_sidebar {
+        margin-left: -212px;
+    }
+    .taskboard_content {
+        width: 100%;
+        margin-left: 0;
+    }
+}

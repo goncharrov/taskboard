@@ -1,0 +1,188 @@
+pre {
+    white-space:pre-wrap;
+    font-size: 14px;
+    font-family: Montserrat;
+}
+
+a.nav-link {
+    color: gray;
+    font-size: 18px;
+    padding: 0;
+}
+
+
+.avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    /* border: 2px solid #e84118; */
+    padding: 2px;
+    flex: none;
+}
+
+input:focus {
+    outline: 0px !important;
+    box-shadow: none !important;
+}
+
+.card-text {
+    border: 2px solid #ddd;
+    border-radius: 8px;
+}
+
+.taskboard_message {
+    background-color: #efefef;
+    border: 0;
+    border-radius: 8px;
+    box-sizing: border-box;
+    display: block;
+    padding: 10px;
+    text-decoration: none;
+    width: 100%;
+}
+
+.taskboard_card-footer_buttons {
+    padding: 2px;
+    margin-left: 2px;
+}
+
+
+.taskboard_card {
+    border: 0;
+}
+
+/* Send file form */
+
+.taskboard_send_file_form {
+    display: none;
+    width: 100%;
+    height: 100%;
+    position: fixed;
+    left: 0;
+    top: 0;
+    background-color: rgba(0, 0, 0, .8);
+    z-index: 2;
+}
+
+.taskboard_send_file_form.active {
+    display: block;
+}
+
+.taskboard_send_file_container {
+    display: flex;
+    width: 100%;
+    height: 100%;
+}
+
+.taskboard_send_file_body {
+    box-sizing: content-box;
+    margin: auto;
+    height: 310px;
+    width: 350px;
+    background-color: #fff;
+    border-radius: 10px;
+    text-align: center;
+    vertical-align: middle;
+    padding: 15px 15px 100px 15px;
+    position: relative;
+    
+}
+
+.taskboard_send_file_body p, h5 {
+    text-align: left;
+    font-size: 15px;
+    font-family: Montserrat;
+    font-weight: 200;
+    color: black;
+    margin: 0px auto 7px 10px;
+}
+
+.taskboard_send_file_body h5 {
+    color: rgb(95, 131, 209);
+    margin: 10px 0px 0px 10px;
+    font-size: 14px;
+}
+
+.taskboard_picture-background {
+    display: none;
+    height: 280px;
+    width: 330px;
+    margin-left: 10px;
+    background-color: rgb(243, 238, 238);  
+}
+
+.taskboard_picture-background.active {
+    display: block;
+}
+
+.taskboard_file-background {
+    display: none;
+    text-align: left;
+    width: 330px;
+    height: 25px;
+    margin-left: 10px;
+    margin-bottom: 10px;
+}
+
+.taskboard_file-background.active {
+    display: block;
+}
+
+.taskboard_send_file_body img {
+    height: auto;
+    width: auto;
+    max-width: 330px;
+    max-height: 280px;
+}
+
+.taskboard_send_file_body input {
+    display: block;    
+    width: 330px;
+    height: 15px;
+    margin: 0px 0px 0px 10px;
+    padding: 15px 0px;
+    background-color: #fff;
+    border: none;
+    border-bottom: 1.5px solid rgb(95, 131, 209);
+    font-family: Montserrat;
+    font-weight: 200;
+    font-size: 15px;
+    color: black;
+}
+
+.taskboard_send_file_body input:focus {
+    outline: none;
+}
+
+.taskboard_file_form_buttons {
+    text-align: right;
+    display: block;
+    width: 325px;
+    margin: 0px 0px 0px 15px;
+    padding: 3px 0px 3px 0px;        
+}
+
+.taskboard_file_form_buttons button {
+    cursor: pointer;
+    font-family: Montserrat;
+    font-weight: 200;
+    font-size: 15px;
+    padding: 5px !important;
+    border: none;
+    color: rgb(95, 131, 209);
+    background-color: #fff;
+}
+
+.taskboard_file_form_buttons button::after {
+    content: '';
+    display: block;
+    width: 100%;
+    background-color: rgb(95, 131, 209);
+    height: 1px;
+    transition: all .3s;
+    transform: scale(0);
+}
+
+.taskboard_file_form_buttons button:hover::after {
+    transform: scale(1);
+}

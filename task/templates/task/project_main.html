@@ -5,27 +5,23 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Рупроект: Главная страница проекта</title>
-    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}"/>
-    <link rel="stylesheet" href="{% static 'icons/bootstrap-icons.css' %}"/>
-    <link rel="stylesheet" href="{% static 'css/task-style.css' %}"/>
+    <title>Taskboard: Главная страница проекта</title>
+    <link rel="stylesheet" href="{% static 'css/style_item.css' %}"/>
     <link rel="icon" href="{% static 'icons/R-blue.png' %}" type="image/x-icon" width="16" height="16">
   </head>
 
   <body>
 
     {% include 'include/_header.html' %}
-    <!-- MAIN -->
+
     <div class="container-fluid">
       <div class="row">
         <!-- SIDEBAR - START -->
-        <nav
-          id="sidebarMenu"
-          class="col-md-3 col-lg-2 d-none d-md-block bg-light rp_sidebar collapse">
+        <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-none d-md-block bg-light taskboard_sidebar collapse">
           <div class="position-sticky sidebar-sticky">
-            <h6 class="rp_sidebar-heading d-flex justify-content-start align-items-center px-2 mt-3 mb-1 text-muted text-uppercase">
+            <h6 class="taskboard_sidebar-heading d-flex justify-content-start align-items-center px-2 mt-3 mb-1 text-muted text-uppercase">
               <i class="bi bi-list" style="font-size: 1rem"></i>
-              <span class="rp_sidebar_heading">Разделы</span>
+              <span class="taskboard_sidebar_heading">Разделы</span>
               <a class="link-secondary" href="#" aria-label="Add a new report">
                 <span data-feather="plus-circle" class="align-text-bottom"></span>
               </a>
@@ -53,201 +49,203 @@
           </div>
         </nav>
         <!-- SIDEBAR - END -->
-        <form action="{% url 'view_project_main' project_item.pk %}" method="post">
-          {% csrf_token %}
-          <main class="col-md-9 col-lg-10 px-md-2 rp_content">
-          <div
-            class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-2 mb-2 border-bottom">
-            <h1 class="h5">Проект: {{ project_item.title|truncatewords_html:7|safe }}</h1>
-            <!-- "ЗАПИСАТЬ" ПОКАЗЫВАЕМ ТОЛЬКО НА БОЛЬШИХ ЭКРАНАХ -->
-            <div class="btn-toolbar mb-1 d-none d-md-block">
-              <button type="submit" class="btn btn-sm btn-outline-primary" id="save_new_form"
-              {% if input_right.button != True %}
-               disabled
-              {% endif %}
-              >
-                Записать
-              </button>
-            </div>
-          </div>
-
-          <!-- ПАНЕЛЬ РАЗДЕЛОВ ДЛЯ СМАРТФОНОВ -->
-          <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-1 mb-2 d-md-none">
-            <div class="btn-toolbar mb-2 mb-md-0">
-               <a
-                 href="{{ project_item.get_absolute_url_main }}"
-                 class="bd-links-link-2 d-inline-block me-1 rounded active"
-                 aria-current="page"
-                 title="Основные данные проекта">
-                 Основные данные
-               </a>
-               <a
-                 href="{{ project_item.get_absolute_url_tasks }}"
-                 class="bd-links-link-2 d-inline-block rounded"
-                 title="Перейти к задачам проекта">
-                 Задачи
-               </a>
-            </div>
-
-            <div class="btn-toolbar mb-2 mb-md-0">
-              <button type="button" class="btn btn-sm btn-outline-primary"
-              {% if input_right.button != True %}
+        
+        <main class="col-md-9 col-lg-10 px-md-2 taskboard_content">
+          <form action="{% url 'view_project_main' project_item.pk %}" method="post">
+            {% csrf_token %}            
+            <div
+              class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-2 mb-1 border-bottom">
+              <h1 class="h5">Проект: {{ project_item.title|truncatewords_html:7|safe }}</h1>
+              <!-- "ЗАПИСАТЬ" ПОКАЗЫВАЕМ ТОЛЬКО НА БОЛЬШИХ ЭКРАНАХ -->
+              <div class="btn-toolbar mb-1 d-none d-md-block">
+                <button type="submit" class="btn btn-sm btn-outline-primary" id="save_new_form"
+                {% if input_right.button != True %}
                 disabled
-              {% endif %}
-              >
-                Записать
-              </button>
+                {% endif %}
+                >
+                  Записать
+                </button>
+              </div>
             </div>
-          </div>
 
-          <div class="container-fluid">
-            <div class="row">
-              <div class="col-md-9 p-0">
-                <!-- ФОРМА ЗАПОЛНЕНИЯ РЕКВИЗИТОВ ЗАДАЧИ  -->
-                {% for message in messages %}
-                  <div class="alert alert-danger" role="alert">
-                      {{ message }}
-                  </div>
-                {% endfor %}
-                <div class="mb-2">
-                  <div class="d-flex justify-content-between">
-                    <label for="{{ form.title.id_for_label }}" class="form-label">Наименование</label>
-                    {% if project_item.clousing_date != Null %}
-                    <span>Закрыт: {{ project_item.clousing_date|date:'d.m.Y' }}</span>
-                    {% endif %}
-                  </div>
-                  <div class="form-control form-control-sm">
-                    {{ project_item.title|safe }}
-                  </div>
-                </div>
+            <!-- ПАНЕЛЬ РАЗДЕЛОВ ДЛЯ СМАРТФОНОВ -->
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-1 mb-2 d-md-none">
+              <div class="btn-toolbar mb-2 mb-md-0">
+                <a
+                  href="{{ project_item.get_absolute_url_main }}"
+                  class="bd-links-link-2 d-inline-block me-1 rounded active"
+                  aria-current="page"
+                  title="Основные данные проекта">
+                  Основные данные
+                </a>
+                <a
+                  href="{{ project_item.get_absolute_url_tasks }}"
+                  class="bd-links-link-2 d-inline-block rounded"
+                  title="Перейти к задачам проекта">
+                  Задачи
+                </a>
+              </div>
 
-                <div class="d-flex justify-content-start mb-2">
-                  <div class="flex-fill me-2">
-                    <div class="col-md-12">
-                      <label for="{{ form.workspace.id_for_label }}" class="form-label">Рабочее пространство</label>
-                      <input
-                        class="form-control form-control-sm"
-                        id="id_workspace"
-                        pk="{{ project_item.workspace.id }}"
-                        value="{{ project_item.workspace|truncatewords:3|safe }}" disabled
-                      />
+              <div class="btn-toolbar mb-2 mb-md-0">
+                <button type="button" class="btn btn-sm btn-outline-primary"
+                {% if input_right.button != True %}
+                  disabled
+                {% endif %}
+                >
+                  Записать
+                </button>
+              </div>
+            </div>
+
+            <div class="container-fluid">
+              <div class="row">
+                <div class="col-md-9 p-0">
+                  <!-- ФОРМА ЗАПОЛНЕНИЯ РЕКВИЗИТОВ ЗАДАЧИ  -->
+                  {% for message in messages %}
+                    <div class="alert alert-danger" role="alert">
+                        {{ message }}
                     </div>
-                    <div class="col-md-12">
-                      <label for="owner_area" class="form-label mt-2">Автор</label>
-                      <input
-                        class="form-control form-control-sm"
-                        id="owner_area"
-                        value="{{ project_item.owner }}" disabled
-                      />
-                    </div>
-
-                    <div class="col-md-12">
-                      <label for="created_at_area" class="form-label mt-2">Дата создания</label>
-                      <input
-                        class="form-control form-control-sm"
-                        type="date"
-                        id="created_at_area"
-                        value="{{ project_item.created_at|date:'Y-m-d' }}" disabled
-                      />
-                    </div>
-                  </div>
-
-                  <div class="flex-fill">
-                    <div class="col-md-12">
-                      <label for="{{ form.department.id_for_label }}" class="form-label">Подразделение</label>
-
-                      {% if input_right.department %}
-                          {{ form.department }}
-                        {% else %}
-                          <input
-                            class="form-control form-control-sm rp_form-fields"
-                            id="id_department"
-                            value="{{ project_item.department|safe }}" disabled
-                          />
+                  {% endfor %}
+                  <div class="mb-2">
+                    <div class="d-flex justify-content-between">
+                      <label for="{{ form.title.id_for_label }}" class="form-label">Наименование</label>
+                      {% if project_item.clousing_date != Null %}
+                      <span>Закрыт: {{ project_item.clousing_date|date:'d.m.Y' }}</span>
                       {% endif %}
+                    </div>
+                    <div class="form-control form-control-sm">
+                      {{ project_item.title|safe }}
+                    </div>
+                  </div>
 
-                      {% if form.department.errors %}
-                      {% for error in form.department.errors %}
-                      <div class="rp_invalid-feedback">
-                        {{ error }}
+                  <div class="d-flex justify-content-start mb-2">
+                    <div class="flex-fill me-2">
+                      <div class="col-md-12">
+                        <label for="{{ form.workspace.id_for_label }}" class="form-label">Рабочее пространство</label>
+                        <input
+                          class="form-control form-control-sm"
+                          id="id_workspace"
+                          pk="{{ project_item.workspace.id }}"
+                          value="{{ project_item.workspace|truncatewords:3|safe }}" disabled
+                        />
                       </div>
-                      {% endfor %}
-                      {% endif %}
+                      <div class="col-md-12">
+                        <label for="owner_area" class="form-label mt-2">Автор</label>
+                        <input
+                          class="form-control form-control-sm"
+                          id="owner_area"
+                          value="{{ project_item.owner }}" disabled
+                        />
+                      </div>
 
+                      <div class="col-md-12">
+                        <label for="created_at_area" class="form-label mt-2">Дата создания</label>
+                        <input
+                          class="form-control form-control-sm"
+                          type="date"
+                          id="created_at_area"
+                          value="{{ project_item.created_at|date:'Y-m-d' }}" disabled
+                        />
+                      </div>
                     </div>
-                    <div class="col-md-12">
-                      <label for="{{ form.status.id_for_label }}" class="form-label mt-2">Состояние</label>
 
-                      {% if input_right.status %}
-                          {{ form.status }}
-                        {% else %}
-                          <input
-                            class="form-control form-control-sm rp_form-fields"
-                            id="id_status"
-                            value="{{ project_item.status|safe }}" disabled
-                          />
-                      {% endif %}
+                    <div class="flex-fill">
+                      <div class="col-md-12">
+                        <label for="{{ form.department.id_for_label }}" class="form-label">Подразделение</label>
 
-                    </div>
-                    <div class="col-md-12">
-                      <label for="finish_date_area" class="form-label mt-2">Планируемая дата выполнения</label>
-
-                      {% if input_right.finish_date %}
-                          {{ form.finish_date }}
-                        {% else %}
-                          <input
-                            class="form-control form-control-sm rp_form-fields"
-                            type="date"
-                            id="id_finish_date"
-                            {% if project_item.finish_date %}
-                            value="{{ project_item.finish_date|date:'Y-m-d' }}"
-                            {% endif %}
-                            disabled
-                          />
+                        {% if input_right.department %}
+                            {{ form.department }}
+                          {% else %}
+                            <input
+                              class="form-control form-control-sm taskboard_form-fields"
+                              id="id_department"
+                              value="{{ project_item.department|safe }}" disabled
+                            />
                         {% endif %}
 
+                        {% if form.department.errors %}
+                        {% for error in form.department.errors %}
+                        <div class="taskboard_invalid-feedback">
+                          {{ error }}
+                        </div>
+                        {% endfor %}
+                        {% endif %}
+
+                      </div>
+                      <div class="col-md-12">
+                        <label for="{{ form.status.id_for_label }}" class="form-label mt-2">Состояние</label>
+
+                        {% if input_right.status %}
+                            {{ form.status }}
+                          {% else %}
+                            <input
+                              class="form-control form-control-sm taskboard_form-fields"
+                              id="id_status"
+                              value="{{ project_item.status|safe }}" disabled
+                            />
+                        {% endif %}
+
+                      </div>
+                      <div class="col-md-12">
+                        <label for="finish_date_area" class="form-label mt-2">Планируемая дата выполнения</label>
+
+                        {% if input_right.finish_date %}
+                            {{ form.finish_date }}
+                          {% else %}
+                            <input
+                              class="form-control form-control-sm taskboard_form-fields"
+                              type="date"
+                              id="id_finish_date"
+                              {% if project_item.finish_date %}
+                              value="{{ project_item.finish_date|date:'Y-m-d' }}"
+                              {% endif %}
+                              disabled
+                            />
+                          {% endif %}
+
+                      </div>
                     </div>
                   </div>
+
+                  {% if project_item.description %}
+                  <div class="mb-2">
+                    <label for="{{ form.description.id_for_label }}" class="form-label">Описание</label>
+                    <div class="form-control form-control-sm taskboard_form-fields">
+                      {{ project_item.description|safe }}
+                    </div>
+                  </div>
+                  {% endif %}
+
                 </div>
 
-                {% if project_item.description %}
-                <div class="mb-2">
-                  <label for="{{ form.description.id_for_label }}" class="form-label">Описание</label>
-                  <div class="form-control form-control-sm rp_form-fields">
-                    {{ project_item.description|safe }}
+                <!-- УЧАСТНИКИ -->
+                <div class="col-md-3">
+                  <div class="table-responsive">
+                    <table class="table table-sm mb-2">
+                      <thead>
+                        <tr>
+                          <th scope="col">Участники</th>
+                          <th></th>
+                        </tr>
+                      </thead>
+                      <tbody id="participant-list">
+                      </tbody>
+                    </table>
                   </div>
+                  {% if input_right.members %}
+                    <div class="flex-fill">
+                      {{ form_members.user }}
+                    </div>
+                    <div class="d-grid gap-2 mt-2">
+                      <button type="button" id='members_add' class="btn btn-sm btn-outline-primary">Добавить</button>
+                    </div>
+                  {% endif %}
                 </div>
-                {% endif %}
-
-              </div>
-
-              <!-- УЧАСТНИКИ -->
-              <div class="col-md-3">
-                <div class="table-responsive">
-                  <table class="table table-sm mb-2">
-                    <thead>
-                      <tr>
-                        <th scope="col">Участники</th>
-                        <th></th>
-                      </tr>
-                    </thead>
-                    <tbody id="participant-list">
-                    </tbody>
-                  </table>
-                </div>
-                {% if input_right.members %}
-                  <div class="flex-fill">
-                    {{ form_members.user }}
-                  </div>
-                  <div class="d-grid gap-2 mt-2">
-                    <button type="button" id='members_add' class="btn btn-sm btn-outline-primary">Добавить</button>
-                  </div>
-                {% endif %}
               </div>
             </div>
-          </div>
+          </form>
         </main>
-        </form>
+        
       </div>
     </div>
     <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>

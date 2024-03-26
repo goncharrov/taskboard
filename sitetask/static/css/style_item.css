@@ -1,0 +1,7 @@
+@import url('bootstrap/bootstrap.min.css');
+@import url('../icons/bootstrap-icons.css');
+@import url('core.css');
+@import url('blocks/sidebar.css');
+@import url('blocks/navbar.css');
+@import url('blocks/chat.css');
+@import url('blocks/fields.css');

@@ -5,10 +5,8 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Рупроект: Главная страница задачи</title>
-    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}"/>
-    <link rel="stylesheet" href="{% static 'icons/bootstrap-icons.css' %}"/>
-    <link rel="stylesheet" href="{% static 'css/task-style.css' %}?ver=1.1.1"/>
+    <title>Taskboard: Главная страница задачи</title>
+    <link rel="stylesheet" href="{% static 'css/style_item.css' %}"/>
     <link rel="icon" href="{% static 'icons/R-blue.png' %}" type="image/x-icon" width="16" height="16">
   </head>
 
@@ -21,20 +19,20 @@
     <div class="container-fluid">
       <div class="row">
         <!-- SIDEBAR - START -->
-        <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-none d-md-block bg-light rp_sidebar collapse">
-
-          <div class="position-sticky sidebar-sticky ">
-
-            <h6 class="rp_sidebar-heading d-flex justify-content-start align-items-center px-2 mt-3 mb-1 text-muted text-uppercase">
+        <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-none d-md-block bg-light taskboard_sidebar collapse">
+          <div class="position-sticky sidebar-sticky">
+            <h6 class="taskboard_sidebar-heading d-flex justify-content-start align-items-center px-2 mt-3 mb-1 text-muted text-uppercase">
                 <i class="bi bi-list" style="font-size: 1rem;"></i>
-                <span class="rp_sidebar_heading">Разделы</span>
+                <span class="taskboard_sidebar_heading">Разделы</span>
                 <a class="link-secondary" href="#" aria-label="Add a new report">
                   <span data-feather="plus-circle" class="align-text-bottom"></span>
                 </a>
             </h6>
 
             <ul class="list-unstyled fw-normal pb-2 small">
-                <li><a href="{{ task_item.get_absolute_url_main }}" class="bd-links-link d-inline-block rounded active" aria-current="page" title="Основные данные задачи">Основные данные</a></li>
+                <li>
+                  <a href="{{ task_item.get_absolute_url_main }}" class="bd-links-link d-inline-block rounded active" 
+                  aria-current="page" title="Основные данные задачи">Основные данные</a></li>
                 <li>
                   <a href="{{ task_item.get_absolute_url_chat }}" class="bd-links-link d-inline-block rounded"  title="Перейти к обсуждению задачи">
                     Обсуждение
@@ -48,12 +46,12 @@
           </div>
 
         </nav>
-        <!-- SIDEBAR - END -->
-        <form action="{% url 'view_task_main' task_item.pk %}" method="post">
-        <!-- class="needs-validation" novalidate -->
-          {% csrf_token %}
-          <main class="col-md-9 col-lg-10 px-md-2 rp_content">
-            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-2 mb-2 border-bottom">
+        <!-- SIDEBAR - END -->       
+          
+        <main class="col-md-9 col-lg-10 px-md-2 taskboard_content">
+          <form action="{% url 'view_task_main' task_item.pk %}" method="post">
+            {% csrf_token %}            
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-2 mb-1 border-bottom">
               <h1 class="h5">Задача: {{ task_item.title|truncatewords_html:7|safe }}</h1>
               <!-- "ЗАПИСАТЬ" ПОКАЗЫВАЕМ ТОЛЬКО НА БОЛЬШИХ ЭКРАНАХ -->
 
@@ -66,28 +64,26 @@
               </div>
 
             </div>
-
             <!-- ПАНЕЛЬ РАЗДЕЛОВ ДЛЯ СМАРТФОНОВ -->
             <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-1 mb-2 d-md-none">
               <div class="btn-toolbar mb-2 mb-md-0">
                 <a href="{{ task_item.get_absolute_url_main }}" class="bd-links-link-2 d-inline-block me-1 rounded active" aria-current="page" title="Основные данные задачи">Основные данные</a>
                 <a href="{{ task_item.get_absolute_url_chat }}" class="bd-links-link-2 d-inline-block rounded" title="Перейти к обсуждению задачи">Обсуждение
-                 {% if new_messages > 0 %}
-                 <text>(<b>+{{ new_messages }}</b>)</text>
-                 {% endif %}
+                {% if new_messages > 0 %}
+                <text>(<b>+{{ new_messages }}</b>)</text>
+                {% endif %}
                 </a>
               </div>
               <div class="btn-toolbar mb-2 mb-md-0">
                 <button type="submit" class="btn btn-sm btn-outline-primary" id="save_new_form_mobile"
                 {% if input_right.button != True %}
-                 disabled
+                disabled
                 {% endif %}
                 >
                   Записать
                 </button>
               </div>
             </div>
-
             <div class="container-fluid">
               <div class="row">
                 <div class="col-md-9 p-0">
@@ -133,7 +129,7 @@
                           {{ form.status }}
                         {% else %}
                           <input
-                            class="form-control form-control-sm rp_form-fields"
+                            class="form-control form-control-sm taskboard_form-fields"
                             id="id_status"
                             value="{{ task_item.status|safe }}" disabled
                           />
@@ -160,7 +156,7 @@
                           {{ form.department }}
                         {% else %}
                           <input
-                            class="form-control form-control-sm rp_form-fields"
+                            class="form-control form-control-sm taskboard_form-fields"
                             id="id_department"
                             value="{{ task_item.department|safe }}" disabled
                           />
@@ -169,7 +165,7 @@
                         {% if input_right.department %}
                           {% if form.department.errors %}
                             {% for error in form.department.errors %}
-                            <div class="rp_invalid-feedback">
+                            <div class="taskboard_invalid-feedback">
                                 {{ error }}
                             </div>
                             {% endfor %}
@@ -184,7 +180,7 @@
                           {{ form.executor }}
                         {% else %}
                           <input
-                            class="form-control form-control-sm rp_form-fields"
+                            class="form-control form-control-sm taskboard_form-fields"
                             id="id_executor"
                             value="{{ task_item.executor|safe }}" disabled
                           />
@@ -203,7 +199,7 @@
                           {{ form.project }}
                         {% else %}
                           <input
-                            class="form-control form-control-sm rp_form-fields"
+                            class="form-control form-control-sm taskboard_form-fields"
                             id="id_project"
                             {% if task_item.project %}
                             value="{{ task_item.project|truncatewords_html:6|safe }}"
@@ -237,7 +233,7 @@
                   {% if task_item.description %}
                   <div class="mb-2">
                     <label for="{{ form.description.id_for_label }}" class="form-label">Описание</label>
-                    <div class="form-control form-control-sm rp_form-fields">
+                    <div class="form-control form-control-sm taskboard_form-fields">
                     {{ task_item.description|safe }}
                     </div>
                   </div>
@@ -254,9 +250,9 @@
                         <th scope="col">Участники</th>
                         <th style="text-align: right">
                           {% if input_right.members %}
-                            <button class="btn btn-light text-secondary border-0 rp_card-footer_buttons_table">
+                            <button class="btn btn-light text-secondary border-0 taskboard_card-footer_buttons_table">
                               <i class="bi bi-download" style="font-size: 1rem; margin-right: 5px;" id="upload-members"
-                                 title="Заполнить участников из проекта"></i>
+                                title="Заполнить участников из проекта"></i>
                             </button>
                           {% endif %}
                         </th>
@@ -277,8 +273,9 @@
                 </div>
               </div>
             </div>
-          </main>
-        </form>
+          </form>
+        </main>
+      
       </div>
     </div>
 

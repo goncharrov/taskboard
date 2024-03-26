@@ -21,16 +21,16 @@ class TaskNewForm(forms.Form):
     title = forms.CharField(max_length=150, widget=forms.TextInput(
         attrs={"class": "form-control form-control-sm", "autocomplete": "off"}))
     # description = forms.CharField(label='Описание', required=False, widget=forms.Textarea(
-    #     attrs={"class": "form-control form-control-sm rp_form-fields", "rows": 4}))
+    #     attrs={"class": "form-control form-control-sm taskboard_form-fields", "rows": 4}))
     description = forms.CharField(label='Описание', required=False, widget=CKEditorUploadingWidget())
-    workspace = forms.ModelChoiceField(queryset=Workspace.objects.all(), empty_label='', widget=forms.Select(attrs={"class": "form-select form-select-sm rp_form-fields"}))
-    department = forms.ModelChoiceField(queryset=Department.objects.all(), empty_label='', widget=forms.Select(attrs={"class": "form-select form-select-sm rp_form-fields"}))
+    workspace = forms.ModelChoiceField(queryset=Workspace.objects.all(), empty_label='', widget=forms.Select(attrs={"class": "form-select form-select-sm taskboard_form-fields"}))
+    department = forms.ModelChoiceField(queryset=Department.objects.all(), empty_label='', widget=forms.Select(attrs={"class": "form-select form-select-sm taskboard_form-fields"}))
     executor = forms.ModelChoiceField(queryset=User.objects.all(), empty_label='',
-                                      widget=forms.Select(attrs={"class": "form-select form-select-sm rp_form-fields"}))
+                                      widget=forms.Select(attrs={"class": "form-select form-select-sm taskboard_form-fields"}))
     project = forms.ModelChoiceField(queryset=Project.objects.all(), required=False, empty_label='',
-                                     widget=forms.Select(attrs={"class": "form-select form-select-sm rp_form-fields"}))
+                                     widget=forms.Select(attrs={"class": "form-select form-select-sm taskboard_form-fields"}))
     finish_date = forms.DateField(label='Плановая дата выполнения', required=False, widget=forms.DateInput(
-        attrs={"format": '%Y-%m-%d', "class": "form-control form-control-sm rp_form-fields", "type": 'date'}))
+        attrs={"format": '%Y-%m-%d', "class": "form-control form-control-sm taskboard_form-fields", "type": 'date'}))
 
     def clean_department(self):
         department = self.cleaned_data['department']
@@ -81,15 +81,15 @@ class TaskForm(forms.ModelForm):
         fields = ['department','executor','status','project','finish_date']
         widgets = {
             'title': forms.TextInput(attrs={"class": "form-control form-control-sm", "autocomplete": "off"}),
-            'description': forms.Textarea(attrs={"class": "form-control form-control-sm rp_form-fields", "rows": 4}),
-            'workspace': forms.Select(attrs={"class": "form-select form-select-sm rp_form-fields"}),
-            'department': forms.Select(attrs={"class": "form-select form-select-sm rp_form-fields"}),
-            'owner': forms.Select(attrs={"class": "form-select form-select-sm rp_form-fields"}),
-            'executor': forms.Select(attrs={"class": "form-select form-select-sm rp_form-fields"}),
-            'status': forms.Select(attrs={"class": "form-select form-select-sm rp_form-fields"}),
-            'project': forms.Select(attrs={"class": "form-select form-select-sm rp_form-fields"}),
-            'created_at': forms.DateInput(attrs={"class": "form-control form-control-sm rp_form-fields","type": 'date',},format="%Y-%m-%d"),
-            'finish_date': forms.DateInput(attrs={"class": "form-control form-control-sm rp_form-fields","type": 'date',},format="%Y-%m-%d"),
+            'description': forms.Textarea(attrs={"class": "form-control form-control-sm taskboard_form-fields", "rows": 4}),
+            'workspace': forms.Select(attrs={"class": "form-select form-select-sm taskboard_form-fields"}),
+            'department': forms.Select(attrs={"class": "form-select form-select-sm taskboard_form-fields"}),
+            'owner': forms.Select(attrs={"class": "form-select form-select-sm taskboard_form-fields"}),
+            'executor': forms.Select(attrs={"class": "form-select form-select-sm taskboard_form-fields"}),
+            'status': forms.Select(attrs={"class": "form-select form-select-sm taskboard_form-fields"}),
+            'project': forms.Select(attrs={"class": "form-select form-select-sm taskboard_form-fields"}),
+            'created_at': forms.DateInput(attrs={"class": "form-control form-control-sm taskboard_form-fields","type": 'date',},format="%Y-%m-%d"),
+            'finish_date': forms.DateInput(attrs={"class": "form-control form-control-sm taskboard_form-fields","type": 'date',},format="%Y-%m-%d"),
         }
 
 class TaskFormExecutor(forms.ModelForm):
@@ -102,15 +102,15 @@ class TaskFormExecutor(forms.ModelForm):
         fields = ['status','finish_date']
         widgets = {
             'title': forms.TextInput(attrs={"class": "form-control form-control-sm", "autocomplete": "off"}),
-            'description': forms.Textarea(attrs={"class": "form-control form-control-sm rp_form-fields", "rows": 4}),
-            'workspace': forms.Select(attrs={"class": "form-select form-select-sm rp_form-fields"}),
-            'department': forms.Select(attrs={"class": "form-select form-select-sm rp_form-fields"}),
-            'owner': forms.Select(attrs={"class": "form-select form-select-sm rp_form-fields"}),
-            'executor': forms.Select(attrs={"class": "form-select form-select-sm rp_form-fields"}),
-            'status': forms.Select(attrs={"class": "form-select form-select-sm rp_form-fields"}),
-            'project': forms.Select(attrs={"class": "form-select form-select-sm rp_form-fields"}),
-            'created_at': forms.DateInput(attrs={"class": "form-control form-control-sm rp_form-fields","type": 'date',},format="%Y-%m-%d"),
-            'finish_date': forms.DateInput(attrs={"class": "form-control form-control-sm rp_form-fields","type": 'date',},format="%Y-%m-%d"),
+            'description': forms.Textarea(attrs={"class": "form-control form-control-sm taskboard_form-fields", "rows": 4}),
+            'workspace': forms.Select(attrs={"class": "form-select form-select-sm taskboard_form-fields"}),
+            'department': forms.Select(attrs={"class": "form-select form-select-sm taskboard_form-fields"}),
+            'owner': forms.Select(attrs={"class": "form-select form-select-sm taskboard_form-fields"}),
+            'executor': forms.Select(attrs={"class": "form-select form-select-sm taskboard_form-fields"}),
+            'status': forms.Select(attrs={"class": "form-select form-select-sm taskboard_form-fields"}),
+            'project': forms.Select(attrs={"class": "form-select form-select-sm taskboard_form-fields"}),
+            'created_at': forms.DateInput(attrs={"class": "form-control form-control-sm taskboard_form-fields","type": 'date',},format="%Y-%m-%d"),
+            'finish_date': forms.DateInput(attrs={"class": "form-control form-control-sm taskboard_form-fields","type": 'date',},format="%Y-%m-%d"),
         }
 
 class ProjectForm(forms.ModelForm):
@@ -143,11 +143,11 @@ class ProjectForm(forms.ModelForm):
         fields = ['department','status', 'finish_date']
         widgets = {
             'title': forms.TextInput(attrs={"class": "form-control form-control-sm", "autocomplete": "off"}),
-            'description': forms.Textarea(attrs={"class": "form-control form-control-sm rp_form-fields", "rows": 4}),
-            'workspace': forms.Select(attrs={"class": "form-select form-select-sm rp_form-fields"}),
-            'department': forms.Select(attrs={"class": "form-select form-select-sm rp_form-fields"}),
-            'status': forms.Select(attrs={"class": "form-select form-select-sm rp_form-fields"}),
-            'finish_date': forms.DateInput(attrs={"class": "form-control form-control-sm rp_form-fields", "type": 'date', }, format="%Y-%m-%d"),
+            'description': forms.Textarea(attrs={"class": "form-control form-control-sm taskboard_form-fields", "rows": 4}),
+            'workspace': forms.Select(attrs={"class": "form-select form-select-sm taskboard_form-fields"}),
+            'department': forms.Select(attrs={"class": "form-select form-select-sm taskboard_form-fields"}),
+            'status': forms.Select(attrs={"class": "form-select form-select-sm taskboard_form-fields"}),
+            'finish_date': forms.DateInput(attrs={"class": "form-control form-control-sm taskboard_form-fields", "type": 'date', }, format="%Y-%m-%d"),
         }
 
 class ProjectNewForm(forms.ModelForm):
@@ -171,36 +171,36 @@ class ProjectNewForm(forms.ModelForm):
         fields = ['title','description','workspace','department']
         widgets = {
             'title': forms.TextInput(attrs={"class": "form-control form-control-sm", "autocomplete": "off"}),
-            # 'description': forms.Textarea(attrs={"class": "form-control form-control-sm rp_form-fields", "rows": 4}),
+            # 'description': forms.Textarea(attrs={"class": "form-control form-control-sm taskboard_form-fields", "rows": 4}),
             'description': CKEditorUploadingWidget(),
-            'workspace': forms.Select(attrs={"class": "form-select form-select-sm rp_form-fields"}),
-            'department': forms.Select(attrs={"class": "form-select form-select-sm rp_form-fields"}),
+            'workspace': forms.Select(attrs={"class": "form-select form-select-sm taskboard_form-fields"}),
+            'department': forms.Select(attrs={"class": "form-select form-select-sm taskboard_form-fields"}),
         }
 
 class MembersTaskForm(forms.Form):
 
     # НЕ привязываем к модели, так как  нужно вывести просто таблицу пользователей
     # queryset = User.objects.filter(is_superuser=False)
-    user = forms.ModelChoiceField(queryset=User.objects.all(), required=False, empty_label='', widget=forms.Select(attrs={"class": "form-select form-select-sm rp_form-fields"}))
+    user = forms.ModelChoiceField(queryset=User.objects.all(), required=False, empty_label='', widget=forms.Select(attrs={"class": "form-select form-select-sm taskboard_form-fields"}))
 
 class SelectionTasksForm(forms.Form):
-    workspace = forms.ModelChoiceField(queryset=Workspace.objects.all(), required=False, empty_label='Рабочее пространство', widget=forms.Select(attrs={"class": "form-select form-select-sm rp_sidebar_select"}))
-    department = forms.ModelChoiceField(queryset=Department.objects.all(), required=False,  empty_label='Подразделение', widget=forms.Select(attrs={"class": "form-select form-select-sm rp_sidebar_select"}))
-    status = forms.ModelChoiceField(queryset=Task_Status.objects.all(), required=False, empty_label='Состояние', widget=forms.Select(attrs={"class": "form-select form-select-sm rp_sidebar_select"}))
-    owner = forms.ModelChoiceField(queryset=User.objects.filter(is_superuser=False), required=False, empty_label='Автор', widget=forms.Select(attrs={"class": "form-select form-select-sm rp_sidebar_select"}))
-    executor = forms.ModelChoiceField(queryset=User.objects.filter(is_superuser=False), required=False, empty_label='Исполнитель', widget=forms.Select(attrs={"class": "form-select form-select-sm rp_sidebar_select"}))
-    project = forms.ModelChoiceField(queryset=Project.objects.all(), required=False, empty_label='Проект', widget=forms.Select(attrs={"class": "form-select form-select-sm rp_sidebar_select"}))
+    workspace = forms.ModelChoiceField(queryset=Workspace.objects.all(), required=False, empty_label='Рабочее пространство', widget=forms.Select(attrs={"class": "form-select form-select-sm taskboard_sidebar_select"}))
+    department = forms.ModelChoiceField(queryset=Department.objects.all(), required=False,  empty_label='Подразделение', widget=forms.Select(attrs={"class": "form-select form-select-sm taskboard_sidebar_select"}))
+    status = forms.ModelChoiceField(queryset=Task_Status.objects.all(), required=False, empty_label='Состояние', widget=forms.Select(attrs={"class": "form-select form-select-sm taskboard_sidebar_select"}))
+    owner = forms.ModelChoiceField(queryset=User.objects.filter(is_superuser=False), required=False, empty_label='Автор', widget=forms.Select(attrs={"class": "form-select form-select-sm taskboard_sidebar_select"}))
+    executor = forms.ModelChoiceField(queryset=User.objects.filter(is_superuser=False), required=False, empty_label='Исполнитель', widget=forms.Select(attrs={"class": "form-select form-select-sm taskboard_sidebar_select"}))
+    project = forms.ModelChoiceField(queryset=Project.objects.all(), required=False, empty_label='Проект', widget=forms.Select(attrs={"class": "form-select form-select-sm taskboard_sidebar_select"}))
 
 class SelectionProjectsForm(forms.Form):
     workspace = forms.ModelChoiceField(queryset=Workspace.objects.all(), required=False,
                                        empty_label='Рабочее пространство', widget=forms.Select(
-            attrs={"class": "form-select form-select-sm rp_sidebar_select"}))
+            attrs={"class": "form-select form-select-sm taskboard_sidebar_select"}))
     department = forms.ModelChoiceField(queryset=Department.objects.all(), required=False, empty_label='Подразделение',
                                         widget=forms.Select(
-                                            attrs={"class": "form-select form-select-sm rp_sidebar_select"}))
+                                            attrs={"class": "form-select form-select-sm taskboard_sidebar_select"}))
     status = forms.ModelChoiceField(queryset=Project_Status.objects.all(), required=False, empty_label='Состояние',
                                     widget=forms.Select(
-                                        attrs={"class": "form-select form-select-sm rp_sidebar_select"}))
+                                        attrs={"class": "form-select form-select-sm taskboard_sidebar_select"}))
     owner = forms.ModelChoiceField(queryset=User.objects.filter(is_superuser=False), required=False,
                                    empty_label='Автор',
-                                   widget=forms.Select(attrs={"class": "form-select form-select-sm rp_sidebar_select"}))
+                                   widget=forms.Select(attrs={"class": "form-select form-select-sm taskboard_sidebar_select"}))

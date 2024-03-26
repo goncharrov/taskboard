@@ -6,10 +6,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Рупроект: Обсуждение задачи</title>
-    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}"/>
-    <link rel="stylesheet" href="{% static 'icons/bootstrap-icons.css' %}"/>
-    <link rel="stylesheet" href="{% static 'css/task-style.css' %}"/>
-    <link rel="stylesheet" href="{% static 'css/chat-style.css' %}?ver=1.1.1"/>
+    <link rel="stylesheet" href="{% static 'css/style_item.css' %}?ver=1.1.6"/>
     <link rel="icon" href="{% static 'icons/R-blue.png' %}" type="image/x-icon" width="16" height="16">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -27,18 +24,13 @@
     <div class="container-fluid">
       <div class="row">
         <!-- SIDEBAR - START -->
-        <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-none d-md-block bg-light rp_sidebar collapse">
+        <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-none d-md-block bg-light taskboard_sidebar collapse">
           <div class="position-sticky sidebar-sticky">
-            <h6
-              class="rp_sidebar-heading d-flex justify-content-start align-items-center px-2 mt-3 mb-1 text-muted text-uppercase"
-            >
+            <h6 class="taskboard_sidebar-heading d-flex justify-content-start align-items-center px-2 mt-3 mb-1 text-muted text-uppercase">
               <i class="bi bi-list" style="font-size: 1rem"></i>
-              <span class="rp_sidebar_heading">Разделы</span>
+              <span class="taskboard_sidebar_heading">Разделы</span>
               <a class="link-secondary" href="#" aria-label="Add a new report">
-                <span
-                  data-feather="plus-circle"
-                  class="align-text-bottom"
-                ></span>
+                <span data-feather="plus-circle" class="align-text-bottom"></span>
               </a>
             </h6>
 
@@ -57,12 +49,13 @@
         </nav>
         <!-- SIDEBAR - END -->
 
-        <main class="col-md-9 col-lg-10 px-md-2 rp_content">
+        <main class="col-md-9 col-lg-10 px-md-2 taskboard_content">
           <div
             class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-2 mb-2 border-bottom">
             <h1 class="h5">Задача: {{ task_item.title|truncatewords_html:7|safe }}</h1>
             <!-- "ЗАПИСАТЬ" ПОКАЗЫВАЕМ ТОЛЬКО НА БОЛЬШИХ ЭКРАНАХ -->
             <div class="btn-toolbar mb-1 d-none d-md-block">
+              {% comment %} 
               <button
                 type="button"
                 class="btn btn-sm btn-outline-primary"
@@ -76,6 +69,9 @@
               >
                 Написать комментарий
               </button>
+              {% endcomment %}
+              {% include 'include/task_chat/_message_button.html' %}
+
             </div>
           </div>
 
@@ -88,6 +84,7 @@
 
             <!-- КНОПКА ОТПРАВИТЬ -->
             <div class="btn-toolbar mb-2 mb-md-0">
+              {% comment %}              
               <button
                 type="button"
                 class="btn btn-sm btn-outline-primary"
@@ -101,10 +98,14 @@
               >
                 Написать комментарий
               </button>
+              {% endcomment %}
+              {% include 'include/task_chat/_message_button.html' %}
+
             </div>
           </div>
 
           <!-- ВЫВОДИМ ПОЛЕ ВВОДА СООБЩЕНИЕ - НАЧАЛО -->
+          {% comment %} 
           <div class="collapse" id="message_collapse">
             <div class="card">
               <div class="input-group d-flex align-items-start">
@@ -112,7 +113,7 @@
                   class="btn-group-vertical"
                   role="group"
                   aria-label="Vertical button group">
-                  <div class="input-group-text bg-transparent border-0 rp_card-footer_buttons">
+                  <div class="input-group-text bg-transparent border-0 taskboard_card-footer_buttons">
                     
                     <input type="file" id="upload-file-top" hidden="hidden">
                     <button class="btn btn-light text-secondary">
@@ -123,7 +124,7 @@
                   </div>
                 </div>
                 <textarea class="form-control border-0" id="text-input-top" placeholder="Ваше сообщение..." rows="3"></textarea>
-                <div class="input-group-text bg-transparent border-0 rp_card-footer_buttons">
+                <div class="input-group-text bg-transparent border-0 taskboard_card-footer_buttons">
                   <button class="btn btn-light text-secondary" id="add-message-top">
                     <i class="bi bi-send" style="font-size: 1rem" title="Отправить сообщение"></i>
                   </button>
@@ -131,6 +132,8 @@
               </div>
             </div>
           </div>
+          {% endcomment %}
+          {% include 'include/task_chat/_message_field.html' %}
           <!-- ВЫВОДИМ ПОЛЕ ВВОДА СООБЩЕНИЕ - ОКОНЧАНИЕ -->
 
           <!-- ВЫВОДИМ СООБЩЕНИЯ -->
@@ -139,13 +142,8 @@
             {% for message in dispute %}
 
             <div class="d-flex align-items-srart mt-3">
-              {% comment %}
-              <div class="position-relative avatar">
-                <img src="" class="img-fluid rounded-circle" alt=""/>
-              </div>
-              {% endcomment %}
               <div class="pe-2">
-                <div class="card rp_message d-inline-block p-2 px-3 m-1"
+                <div class="card taskboard_message d-inline-block p-2 px-3 m-1"
                      {% if message.user_id == user_id %}
                      style="background-color: rgba(var(--bd-violet-rgb), 0.2);"
                      {% endif %}
@@ -179,7 +177,7 @@
                   <div class="small">
                     <i class="bi bi-chat-left ms-1" style="font-size: 1rem"></i>
                     <a
-                      class="rp_sidebar_heading"
+                      class="taskboard_sidebar_heading"
                       {% if is_task_closed == True  %}
                       style="color: #77808c; pointer-events: none;"
                       {% else %}
@@ -200,7 +198,7 @@
                   <div class="card mb-1 mt-2">
                     <div class="input-group d-flex align-items-start">
                       <div class="btn-group-vertical" role="group" aria-label="Vertical button group">
-                        <div class="input-group-text bg-transparent border-0 rp_card-footer_buttons">
+                        <div class="input-group-text bg-transparent border-0 taskboard_card-footer_buttons">
                           <input type="file" id="upload-file-{{ message.id }}" hidden="hidden">
                           <button class="btn btn-light text-secondary">
                             <label for="upload-file-{{ message.id }}">
@@ -217,7 +215,7 @@
                         rows="3"
                       ></textarea>
 
-                      <div class="input-group-text bg-transparent border-0 rp_card-footer_buttons">
+                      <div class="input-group-text bg-transparent border-0 taskboard_card-footer_buttons">
                         <button class="btn btn-light text-secondary" id="button-add-message-{{ message.id }}">
                           <i class="bi bi-send" id="add-message-{{ message.id }}" style="font-size: 1rem" title="Отправить сообщение"></i>
                         </button>
@@ -232,17 +230,8 @@
               {% for reply_message in message.in_reply %}
               <!-- Ответ на предыдущее письмо -->
               <div class="d-flex align-items-srart mt-2 mb-3 ms-5">
-                {% comment %}
-                <div class="position-relative avatar">
-                  <img
-                    src=""
-                    class="img-fluid rounded-circle"
-                    alt=""
-                  />
-                </div>
-                {% endcomment %}
                 <div class="pe-2">
-                  <div class="card rp_message d-inline-block p-2 px-3 m-1"
+                  <div class="card taskboard_message d-inline-block p-2 px-3 m-1"
                     {% if reply_message.user_id == user_id %}
                      style="background-color: rgba(var(--bd-violet-rgb), 0.2);"
                     {% endif %}
@@ -279,7 +268,7 @@
                     <div class="small">
                       <i class="bi bi-chat-left ms-1" style="font-size: 1rem"></i>
                       <a
-                      class="rp_sidebar_heading"
+                      class="taskboard_sidebar_heading"
                       {% if is_task_closed == True  %}
                       style="color: #77808c; pointer-events: none;"
                       {% else %}
@@ -300,7 +289,7 @@
                     <div class="card mt-2">
                       <div class="input-group d-flex align-items-start">
                         <div class="btn-group-vertical" role="group" aria-label="Vertical button group">
-                          <div class="input-group-text bg-transparent border-0 rp_card-footer_buttons">
+                          <div class="input-group-text bg-transparent border-0 taskboard_card-footer_buttons">
                             <input type="file" id="upload-file-{{ reply_message.id }}" hidden="hidden">
                             <button class="btn btn-light text-secondary">
                               <label for="upload-file-{{ reply_message.id }}">
@@ -308,13 +297,6 @@
                               </label>
                             </button>
                           </div>
-                          {% comment %}
-                          <div class="input-group-text bg-transparent border-0 rp_card-footer_buttons">
-                            <button class="btn btn-light text-secondary">
-                              <i class="bi bi-emoji-smile" style="font-size: 1rem" title="Добавить смайл"></i>
-                            </button>
-                          </div>
-                          {% endcomment %}
                         </div>
 
                         <textarea
@@ -324,7 +306,7 @@
                             rows="3">
                         </textarea>
 
-                        <div class="input-group-text bg-transparent border-0 rp_card-footer_buttons">
+                        <div class="input-group-text bg-transparent border-0 taskboard_card-footer_buttons">
                           <button class="btn btn-light text-secondary" id="button-add-message-{{ reply_message.id }}">
                             <i class="bi bi-send" id="add-message-{{ reply_message.id }}" style="font-size: 1rem" title="Отправить сообщение"></i>
                           </button>
@@ -367,8 +349,7 @@
             <div class="card mb-1">
               <div class="input-group d-flex align-items-start">
                 <div class="btn-group-vertical" role="group" aria-label="Vertical button group">
-                  <div class="input-group-text bg-transparent border-0 rp_card-footer_buttons">
-
+                  <div class="input-group-text bg-transparent border-0 taskboard_card-footer_buttons">
                     <input type="file" id="upload-file-bottom" hidden="hidden">
                     <button class="btn btn-light text-secondary">
                       <label for="upload-file-bottom">
@@ -376,18 +357,11 @@
                       </label>
                     </button>
                   </div>
-                  {%  comment %}
-                  <div class="input-group-text bg-transparent border-0 rp_card-footer_buttons">
-                    <button class="btn btn-light text-secondary">
-                      <i class="bi bi-emoji-smile" style="font-size: 1rem" title="Добавить смайл"></i>
-                    </button>
-                  </div>
-                  {%  endcomment %}
                 </div>
 
                 <textarea class="form-control border-0" id="text-input-bottom" placeholder="Ваше сообщение..." rows="3"></textarea>
 
-                <div class="input-group-text bg-transparent border-0 rp_card-footer_buttons">
+                <div class="input-group-text bg-transparent border-0 taskboard_card-footer_buttons">
                   <button class="btn btn-light text-secondary" id="add-message-bottom">
                     <i class="bi bi-send" style="font-size: 1rem" title="Отправить сообщение"></i>
                   </button>
@@ -402,22 +376,22 @@
       </div>
     </div>
 
-    <div class="rp_send_file_form" id="send_file_form">
-        <div class="rp_send_file_container">
-            <div class="rp_send_file_body" id="open_file_form">
+    <div class="taskboard_send_file_form" id="send_file_form">
+        <div class="taskboard_send_file_container">
+            <div class="taskboard_send_file_body" id="open_file_form">
                 <p><b>Отправить файл</b></p>
                 <form action="">
-                    <div class="rp_picture-background" id="picture-background">
+                    <div class="taskboard_picture-background" id="picture-background">
                         <img src="" alt="" id="image_file">
                     </div>
-                    <div class="rp_file-background" id="file-background">
+                    <div class="taskboard_file-background" id="file-background">
                         <i class="bi bi-file-earmark" style="font-size: 1.2rem;"></i>
                         <span><b id="file-name"></b></span>
                     </div>
                     <h5><b>Добавить описание</b></h5>
                     <input type="text" id="send_file_body_input" autocomplete="off">
                 </form>
-                <div class="rp_file_form_buttons">
+                <div class="taskboard_file_form_buttons">
                     <button id="file_form_close"><b>Отмена</b></button>
                     <button id="file_form_send"><b>Отправить</b></button>
                 </div>
@@ -426,7 +400,7 @@
     </div>
 
     <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
-    <script src="{% static 'js/task_chat.js' %}?ver=1.1.1"></script>
+    <script src="{% static 'js/task_chat.js' %}?ver=1.1.3"></script>
 
   </body>
 </html>

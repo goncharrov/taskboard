@@ -1,0 +1,20 @@
+.taskboard_card-footer_buttons_table {
+    padding: 0;
+}
+
+td a {
+    text-decoration: none;
+    color: black;
+}
+
+td a:hover {
+    text-decoration: underline;
+}
+
+@media screen and (max-width: 767px) {
+
+    .table_row {
+        display: none;
+    }
+
+}
