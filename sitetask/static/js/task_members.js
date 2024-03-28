@@ -78,7 +78,7 @@ function add_row(item) {
         var DelButton = document.createElement("button");
         DelButton.setAttribute("role", "button");
         DelButton.title = "Удалить из списка участников";
-        DelButton.className = "btn btn-light text-secondary border-0 taskboard_card-footer_buttons_table bi bi-trash";
+        DelButton.className = "btn btn-light text-secondary border-0 taskboard_button_delete bi bi-trash";
         DelButton.id = "members_delete_" + item.id;
         DelButton.style["font-size"] = "0.8rem";
         DelButton.style["margin-right"] = "5px";

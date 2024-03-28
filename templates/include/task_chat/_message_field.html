@@ -1,26 +1,33 @@
-<div class="collapse" id="message_collapse">
-    <div class="card">
+<div class="collapse" id="message_collapse-{{ target }}">
+    <div class="card {{ style }}">
         <div class="input-group d-flex align-items-start">
-        <div
-            class="btn-group-vertical"
-            role="group"
-            aria-label="Vertical button group">
-            <div class="input-group-text bg-transparent border-0 taskboard_card-footer_buttons">
-            
-            <input type="file" id="upload-file-top" hidden="hidden">
-            <button class="btn btn-light text-secondary">
-                <label for="upload-file-top">
-                <i class="bi bi-paperclip" style="font-size: 1rem; cursor: pointer;" title="Добавить изображение"></i>
-                </label>
-            </button>
+            <div
+                class="btn-group-vertical"
+                role="group"
+                aria-label="Vertical button group">
+                <div class="input-group-text bg-transparent border-0 taskboard_card-footer_buttons">
+                
+                <input type="file" id="upload-file-{{ target }}" hidden="hidden">
+                <button class="btn btn-light text-secondary">
+                    <label for="upload-file-{{ target }}">
+                    <i class="bi bi-paperclip" style="font-size: 1rem; cursor: pointer;" title="Добавить изображение"></i>
+                    </label>
+                </button>
+                </div>
             </div>
-        </div>
-        <textarea class="form-control border-0" id="text-input-top" placeholder="Ваше сообщение..." rows="3"></textarea>
-        <div class="input-group-text bg-transparent border-0 taskboard_card-footer_buttons">
-            <button class="btn btn-light text-secondary" id="add-message-top">
-            <i class="bi bi-send" style="font-size: 1rem" title="Отправить сообщение"></i>
-            </button>
-        </div>
+
+            <textarea 
+                class="form-control border-0" 
+                id="text-input-{{ target }}" 
+                placeholder="Ваше сообщение..." 
+                rows="3">
+            </textarea>
+            
+            <div class="input-group-text bg-transparent border-0 taskboard_card-footer_buttons">
+                <button class="btn btn-light text-secondary" id="button-add-message-{{ target }}">
+                <i class="bi bi-send" id="add-message-{{ target }}" style="font-size: 1rem" title="Отправить сообщение"></i>
+                </button>
+            </div>
         </div>
     </div>
 </div>

@@ -26,3 +26,7 @@
 .taskboard_member_delete {
   text-align: right;
 }
+
+.taskboard_button_delete {
+  padding: 0;
+}

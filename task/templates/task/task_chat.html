@@ -16,24 +16,16 @@
   </head>
 
   <body>
-
     {% include 'include/_header.html' %}
-
     <!-- MAIN -->
-
     <div class="container-fluid">
       <div class="row">
         <!-- SIDEBAR - START -->
         <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-none d-md-block bg-light taskboard_sidebar collapse">
-          <div class="position-sticky sidebar-sticky">
-            <h6 class="taskboard_sidebar-heading d-flex justify-content-start align-items-center px-2 mt-3 mb-1 text-muted text-uppercase">
-              <i class="bi bi-list" style="font-size: 1rem"></i>
-              <span class="taskboard_sidebar_heading">Разделы</span>
-              <a class="link-secondary" href="#" aria-label="Add a new report">
-                <span data-feather="plus-circle" class="align-text-bottom"></span>
-              </a>
-            </h6>
+          <div class="position-sticky sidebar-sticky"> 
 
+            {% include 'include/_sidebar.html' %}
+            
             <ul class="list-unstyled fw-normal pb-2 small">
               <li>
                 <a href="{{ task_item.get_absolute_url_main }}" class="bd-links-link d-inline-block rounded"
@@ -55,23 +47,7 @@
             <h1 class="h5">Задача: {{ task_item.title|truncatewords_html:7|safe }}</h1>
             <!-- "ЗАПИСАТЬ" ПОКАЗЫВАЕМ ТОЛЬКО НА БОЛЬШИХ ЭКРАНАХ -->
             <div class="btn-toolbar mb-1 d-none d-md-block">
-              {% comment %} 
-              <button
-                type="button"
-                class="btn btn-sm btn-outline-primary"
-                data-bs-toggle="collapse"
-                data-bs-target="#message_collapse"
-                aria-expanded="false"
-                aria-controls="message_collapse"
-                {% if is_task_closed == True  %}
-                disabled
-                {% endif %}
-              >
-                Написать комментарий
-              </button>
-              {% endcomment %}
-              {% include 'include/task_chat/_message_button.html' %}
-
+              {% include 'include/task_chat/_message_button.html' with target='top' %}
             </div>
           </div>
 
@@ -81,60 +57,12 @@
               <a href="{{ task_item.get_absolute_url_main }}" class="bd-links-link-2 d-inline-block me-1 rounded" aria-current="page" title="Основные данные задачи">Основные данные</a>
               <a href="{{ task_item.get_absolute_url_chat }}" class="bd-links-link-2 d-inline-block rounded active"  title="Перейти к обсуждению задачи" >Обсуждение</a>
             </div>
-
-            <!-- КНОПКА ОТПРАВИТЬ -->
-            <div class="btn-toolbar mb-2 mb-md-0">
-              {% comment %}              
-              <button
-                type="button"
-                class="btn btn-sm btn-outline-primary"
-                data-bs-toggle="collapse"
-                data-bs-target="#message_collapse"
-                aria-expanded="false"
-                aria-controls="message_collapse"
-                {% if is_task_closed == True  %}
-                disabled
-                {% endif %}
-              >
-                Написать комментарий
-              </button>
-              {% endcomment %}
-              {% include 'include/task_chat/_message_button.html' %}
-
+            <div class="btn-toolbar mb-2 mb-md-0"> 
+              {% include 'include/task_chat/_message_button.html' with target='top' %}
             </div>
           </div>
 
-          <!-- ВЫВОДИМ ПОЛЕ ВВОДА СООБЩЕНИЕ - НАЧАЛО -->
-          {% comment %} 
-          <div class="collapse" id="message_collapse">
-            <div class="card">
-              <div class="input-group d-flex align-items-start">
-                <div
-                  class="btn-group-vertical"
-                  role="group"
-                  aria-label="Vertical button group">
-                  <div class="input-group-text bg-transparent border-0 taskboard_card-footer_buttons">
-                    
-                    <input type="file" id="upload-file-top" hidden="hidden">
-                    <button class="btn btn-light text-secondary">
-                      <label for="upload-file-top">
-                        <i class="bi bi-paperclip" style="font-size: 1rem; cursor: pointer;" title="Добавить изображение"></i>
-                      </label>
-                    </button>
-                  </div>
-                </div>
-                <textarea class="form-control border-0" id="text-input-top" placeholder="Ваше сообщение..." rows="3"></textarea>
-                <div class="input-group-text bg-transparent border-0 taskboard_card-footer_buttons">
-                  <button class="btn btn-light text-secondary" id="add-message-top">
-                    <i class="bi bi-send" style="font-size: 1rem" title="Отправить сообщение"></i>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-          {% endcomment %}
-          {% include 'include/task_chat/_message_field.html' %}
-          <!-- ВЫВОДИМ ПОЛЕ ВВОДА СООБЩЕНИЕ - ОКОНЧАНИЕ -->
+          {% include 'include/task_chat/_message_field.html' with target='top' %}
 
           <!-- ВЫВОДИМ СООБЩЕНИЯ -->
           <div id="dispute-list">
@@ -171,59 +99,10 @@
                   {% endif  %}
                   <div class="d-md-none mt-1" style="color: grey">{{ message.created_at }}</div>
                 </div>
+                
+                {% include 'include/task_chat/_message_button_answer.html' with target=message.id %}
+                {% include 'include/task_chat/_message_field.html' with target=message.id style='mb-1 mt-2' %}
 
-                <!-- КНОПКА ОТВЕТИТЬ -->
-                <div>
-                  <div class="small">
-                    <i class="bi bi-chat-left ms-1" style="font-size: 1rem"></i>
-                    <a
-                      class="taskboard_sidebar_heading"
-                      {% if is_task_closed == True  %}
-                      style="color: #77808c; pointer-events: none;"
-                      {% else %}
-                      style="color: #77808c"
-                      {% endif %}
-                      data-bs-toggle="collapse"
-                      data-bs-target="#message_collapse-{{ message.id }}"
-                      aria-expanded="false"
-                      aria-controls="message_collapse-{{ message.id }}"
-                      href=""
-                      >ОТВЕТИТЬ
-                    </a>
-                  </div>
-                 </div>
-
-                <!-- ВЫВОДИМ ПОЛЕ ВВОДА СООБЩЕНИЕ - НАЧАЛО -->
-                <div class="collapse" id="message_collapse-{{ message.id }}">
-                  <div class="card mb-1 mt-2">
-                    <div class="input-group d-flex align-items-start">
-                      <div class="btn-group-vertical" role="group" aria-label="Vertical button group">
-                        <div class="input-group-text bg-transparent border-0 taskboard_card-footer_buttons">
-                          <input type="file" id="upload-file-{{ message.id }}" hidden="hidden">
-                          <button class="btn btn-light text-secondary">
-                            <label for="upload-file-{{ message.id }}">
-                              <i class="bi bi-paperclip" style="font-size: 1rem; cursor: pointer;" title="Добавить изображение"></i>
-                            </label>
-                          </button>
-                        </div>
-                      </div>
-
-                      <textarea
-                        class="form-control border-0"
-                        id="text-input-{{ message.id }}"
-                        placeholder="Ваше сообщение..."
-                        rows="3"
-                      ></textarea>
-
-                      <div class="input-group-text bg-transparent border-0 taskboard_card-footer_buttons">
-                        <button class="btn btn-light text-secondary" id="button-add-message-{{ message.id }}">
-                          <i class="bi bi-send" id="add-message-{{ message.id }}" style="font-size: 1rem" title="Отправить сообщение"></i>
-                        </button>
-                      </div >
-                    </div>
-                  </div>
-                </div>
-                <!-- ВЫВОДИМ ПОЛЕ ВВОДА СООБЩЕНИЕ - ОКОНЧАНИЕ -->
               </div>
             </div>
 
@@ -263,58 +142,10 @@
                     <div><pre>{{ reply_message.content }}</pre></div>
                     {% endif  %}
                     <div class="d-md-none mt-1" style="color: grey">{{ reply_message.created_at }}</div>
-                  </div>
-                  <div>
-                    <div class="small">
-                      <i class="bi bi-chat-left ms-1" style="font-size: 1rem"></i>
-                      <a
-                      class="taskboard_sidebar_heading"
-                      {% if is_task_closed == True  %}
-                      style="color: #77808c; pointer-events: none;"
-                      {% else %}
-                      style="color: #77808c"
-                      {% endif %}
-                      href=""
-                      data-bs-toggle="collapse"
-                      data-bs-target="#message_collapse-{{ reply_message.id }}"
-                      aria-expanded="false"
-                      aria-controls="message_collapse-{{ reply_message.id }}"
-                      onclick="return false"
-                      >ОТВЕТИТЬ</a>
-                    </div>
-                  </div>
+                  </div>                  
 
-                  <!-- ВЫВОДИМ ПОЛЕ ВВОДА СООБЩЕНИЕ - НАЧАЛО -->
-                  <div class="collapse" id="message_collapse-{{ reply_message.id }}">
-                    <div class="card mt-2">
-                      <div class="input-group d-flex align-items-start">
-                        <div class="btn-group-vertical" role="group" aria-label="Vertical button group">
-                          <div class="input-group-text bg-transparent border-0 taskboard_card-footer_buttons">
-                            <input type="file" id="upload-file-{{ reply_message.id }}" hidden="hidden">
-                            <button class="btn btn-light text-secondary">
-                              <label for="upload-file-{{ reply_message.id }}">
-                                <i class="bi bi-paperclip" style="font-size: 1rem; cursor: pointer;" title="Добавить изображение"></i>
-                              </label>
-                            </button>
-                          </div>
-                        </div>
-
-                        <textarea
-                            class="form-control border-0"
-                            id="text-input-{{ reply_message.id }}"
-                            placeholder="Ваше сообщение..."
-                            rows="3">
-                        </textarea>
-
-                        <div class="input-group-text bg-transparent border-0 taskboard_card-footer_buttons">
-                          <button class="btn btn-light text-secondary" id="button-add-message-{{ reply_message.id }}">
-                            <i class="bi bi-send" id="add-message-{{ reply_message.id }}" style="font-size: 1rem" title="Отправить сообщение"></i>
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <!-- ВЫВОДИМ ПОЛЕ ВВОДА СООБЩЕНИЕ - ОКОНЧАНИЕ -->
+                  {% include 'include/task_chat/_message_button_answer.html' with target=reply_message.id %}
+                  {% include 'include/task_chat/_message_field.html' with target=reply_message.id style='mt-2' %}
 
                 </div>
               </div>
@@ -324,80 +155,20 @@
 
           </div>
 
-          <!-- ВНИЗУ ЕСЛИ МНОГО СООБЩЕНИЙ ДУБЛИПУЕМ КНОПКУ -->
           {% if message_quantity > 5 %}
           <div class="d-flex justify-content-end flex-wrap flex-md-nowrap pt-1 pb-2 mb-2 border-bottom">
-            <div>
-              <button
-                type="button"
-                class="btn btn-sm btn-outline-primary"
-                data-bs-toggle="collapse"
-                data-bs-target="#message_collapse-end"
-                aria-expanded="false"
-                aria-controls="message_collapse-end"
-                {% if is_task_closed == True  %}
-                disabled
-                {% endif %}
-              >
-                Написать комментарий
-              </button>
+            <div>   
+              {% include 'include/task_chat/_message_button.html' with target='bottom' %}
             </div>
-          </div>
-
-          <!-- ВЫВОДИМ ПОЛЕ ВВОДА СООБЩЕНИЕ - НАЧАЛО -->
-          <div class="collapse" id="message_collapse-end">
-            <div class="card mb-1">
-              <div class="input-group d-flex align-items-start">
-                <div class="btn-group-vertical" role="group" aria-label="Vertical button group">
-                  <div class="input-group-text bg-transparent border-0 taskboard_card-footer_buttons">
-                    <input type="file" id="upload-file-bottom" hidden="hidden">
-                    <button class="btn btn-light text-secondary">
-                      <label for="upload-file-bottom">
-                        <i class="bi bi-paperclip" style="font-size: 1rem; cursor: pointer;" title="Добавить изображение"></i>
-                      </label>
-                    </button>
-                  </div>
-                </div>
-
-                <textarea class="form-control border-0" id="text-input-bottom" placeholder="Ваше сообщение..." rows="3"></textarea>
-
-                <div class="input-group-text bg-transparent border-0 taskboard_card-footer_buttons">
-                  <button class="btn btn-light text-secondary" id="add-message-bottom">
-                    <i class="bi bi-send" style="font-size: 1rem" title="Отправить сообщение"></i>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-          <!-- ВЫВОДИМ ПОЛЕ ВВОДА СООБЩЕНИЕ - ОКОНЧАНИЕ -->
+          </div>         
+          {% include 'include/task_chat/_message_field.html' with target='bottom' style='mb-1' %}
           {% endif %}
+
+          {% include 'include/task_chat/_message_send_file_form.html' %}
 
         </main>
       </div>
-    </div>
-
-    <div class="taskboard_send_file_form" id="send_file_form">
-        <div class="taskboard_send_file_container">
-            <div class="taskboard_send_file_body" id="open_file_form">
-                <p><b>Отправить файл</b></p>
-                <form action="">
-                    <div class="taskboard_picture-background" id="picture-background">
-                        <img src="" alt="" id="image_file">
-                    </div>
-                    <div class="taskboard_file-background" id="file-background">
-                        <i class="bi bi-file-earmark" style="font-size: 1.2rem;"></i>
-                        <span><b id="file-name"></b></span>
-                    </div>
-                    <h5><b>Добавить описание</b></h5>
-                    <input type="text" id="send_file_body_input" autocomplete="off">
-                </form>
-                <div class="taskboard_file_form_buttons">
-                    <button id="file_form_close"><b>Отмена</b></button>
-                    <button id="file_form_send"><b>Отправить</b></button>
-                </div>
-            </div>
-        </div>
-    </div>
+    </div>   
 
     <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
     <script src="{% static 'js/task_chat.js' %}?ver=1.1.3"></script>

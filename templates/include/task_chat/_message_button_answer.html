@@ -1,0 +1,19 @@
+<div>
+    <div class="small">
+      <i class="bi bi-chat-left ms-1" style="font-size: 1rem"></i>
+      <a
+      class="taskboard_sidebar_heading"
+      {% if is_task_closed == True  %}
+      style="color: #77808c; pointer-events: none;"
+      {% else %}
+      style="color: #77808c"
+      {% endif %}
+      href=""
+      data-bs-toggle="collapse"
+      data-bs-target="#message_collapse-{{ target }}"
+      aria-expanded="false"
+      aria-controls="message_collapse-{{ target }}"
+      onclick="return false"
+      >ОТВЕТИТЬ</a>
+    </div>
+  </div>

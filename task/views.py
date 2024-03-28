@@ -480,7 +480,7 @@ def get_tasks(request):
 
         selection_form = SelectionTasksForm()
 
-        print(selection_form)
+        # print(selection_form)
 
         # Установим фильтры на селекторы
 

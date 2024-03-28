@@ -21,26 +21,21 @@
         <!-- SIDEBAR - START -->
         <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-none d-md-block bg-light taskboard_sidebar collapse">
           <div class="position-sticky sidebar-sticky">
-            <h6 class="taskboard_sidebar-heading d-flex justify-content-start align-items-center px-2 mt-3 mb-1 text-muted text-uppercase">
-                <i class="bi bi-list" style="font-size: 1rem;"></i>
-                <span class="taskboard_sidebar_heading">Разделы</span>
-                <a class="link-secondary" href="#" aria-label="Add a new report">
-                  <span data-feather="plus-circle" class="align-text-bottom"></span>
-                </a>
-            </h6>
-
+            
+            {% include 'include/_sidebar.html' %}
+            
             <ul class="list-unstyled fw-normal pb-2 small">
-                <li>
-                  <a href="{{ task_item.get_absolute_url_main }}" class="bd-links-link d-inline-block rounded active" 
-                  aria-current="page" title="Основные данные задачи">Основные данные</a></li>
-                <li>
-                  <a href="{{ task_item.get_absolute_url_chat }}" class="bd-links-link d-inline-block rounded"  title="Перейти к обсуждению задачи">
-                    Обсуждение
-                    {% if new_messages > 0 %}
-                    <text>(<b>+{{ new_messages }}</b>)</text>
-                    {% endif %}
-                  </a>
-                </li>
+              <li>
+                <a href="{{ task_item.get_absolute_url_main }}" class="bd-links-link d-inline-block rounded active" 
+                aria-current="page" title="Основные данные задачи">Основные данные</a></li>
+              <li>
+                <a href="{{ task_item.get_absolute_url_chat }}" class="bd-links-link d-inline-block rounded"  title="Перейти к обсуждению задачи">
+                  Обсуждение
+                  {% if new_messages > 0 %}
+                  <text>(<b>+{{ new_messages }}</b>)</text>
+                  {% endif %}
+                </a>
+              </li>
             </ul>
 
           </div>
@@ -86,10 +81,11 @@
             </div>
             <div class="container-fluid">
               <div class="row">
-                <div class="col-md-9 p-0">
-                  <!-- ФОРМА ЗАПОЛНЕНИЯ РЕКВИЗИТОВ ЗАДАЧИ  -->
 
-                  <div class="mb-2">
+                <!-- ФОРМА ЗАПОЛНЕНИЯ РЕКВИЗИТОВ ЗАДАЧИ  -->
+                <div class="col-md-9 p-0">                  
+
+                  <div class="mb-2">                    
                     <div class="d-flex justify-content-between">
                       <label for="{{ form.title.id_for_label }}" class="form-label">Наименование</label>
                       {% if task_item.clousing_date != Null %}
@@ -147,6 +143,7 @@
                       </div>
 
                     </div>
+                    
                     <div class="col ps-1">
 
                       <div class="col-md-12">
@@ -250,7 +247,7 @@
                         <th scope="col">Участники</th>
                         <th style="text-align: right">
                           {% if input_right.members %}
-                            <button class="btn btn-light text-secondary border-0 taskboard_card-footer_buttons_table">
+                            <button class="btn btn-light text-secondary border-0 taskboard_button_delete">
                               <i class="bi bi-download" style="font-size: 1rem; margin-right: 5px;" id="upload-members"
                                 title="Заполнить участников из проекта"></i>
                             </button>

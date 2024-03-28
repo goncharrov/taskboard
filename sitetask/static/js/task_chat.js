@@ -230,10 +230,10 @@ function add_reply_message_html(reply_message, user_id) {
 function clean_message_id(message_id) {
     if (message_id == 'top') {
         text_input_top.value = "";
-        document.querySelector("#message_collapse").classList.remove('show');
+        document.querySelector("#message_collapse-top").classList.remove('show');
     } else if (message_id == 'bottom') {
         text_input_bottom.value = "";
-        document.querySelector("#message_collapse-end").classList.remove('show');
+        document.querySelector("#message_collapse-bottom").classList.remove('show');
     } else {
         document.querySelector("#text-input-"+message_id).value = "";
         document.querySelector("#message_collapse-"+message_id).classList.remove('show');

@@ -20,27 +20,12 @@
           id="sidebarMenu"
           class="col-md-3 col-lg-2 d-none d-md-block bg-light taskboard_sidebar collapse">
           <div class="position-sticky taskboard_sidebar-sticky">
-            <h6
-              class="taskboard_sidebar-heading d-flex justify-content-start align-items-center px-2 mt-3 mb-1 text-muted text-uppercase">
-              <i class="bi bi-list" style="font-size: 1rem"></i>
-              <span class="taskboard_sidebar_heading">Разделы</span>
-              <a class="link-secondary" href="#" aria-label="Add a new report">
-                <span
-                  data-feather="plus-circle"
-                  class="align-text-bottom"
-                ></span>
-              </a>
-            </h6>
+            
+            {% include 'include/_sidebar.html' %}         
 
             <ul class="list-unstyled fw-normal pb-2 small">
-              <li>
-                <a
-                  href="#"
-                  class="bd-links-link d-inline-block rounded active"
-                  aria-current="page"
-                  title="Основные данные задачи"
-                  >Основные данные</a
-                >
+              <li><a href="#" class="bd-links-link d-inline-block rounded active" aria-current="page"
+                  title="Основные данные задачи">Основные данные</a>
               </li>
             </ul>
           </div>

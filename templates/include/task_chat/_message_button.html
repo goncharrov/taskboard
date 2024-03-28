@@ -2,9 +2,9 @@
     type="button"
     class="btn btn-sm btn-outline-primary"
     data-bs-toggle="collapse"
-    data-bs-target="#message_collapse"
+    data-bs-target="#message_collapse-{{ target }}"
     aria-expanded="false"
-    aria-controls="message_collapse"
+    aria-controls="message_collapse-{{ target }}"
     {% if is_task_closed == True  %}
     disabled
     {% endif %}
