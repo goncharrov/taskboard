@@ -1,10 +1,9 @@
 from django import forms
-from .models import Task, Workspace, Department, Project, User, Task_Status, Project_Status
 from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
-from ckeditor_uploader.widgets import CKEditorUploadingWidget
-
 from django.contrib.auth.forms import AuthenticationForm
+from ckeditor_uploader.widgets import CKEditorUploadingWidget
+from .models import Task, Workspace, Department, Project, User, Task_Status, Project_Status
 
 User = get_user_model()
 # print(User)
@@ -35,7 +34,7 @@ class TaskNewForm(forms.Form):
     def clean_department(self):
         department = self.cleaned_data['department']
         workspace = self.cleaned_data['workspace']
-        if department != None:
+        if department is not None:
             if department.workspace != workspace:
                 raise ValidationError("Подразделение не относится к выбранному рабочему пространству")
         return department
@@ -161,7 +160,7 @@ class ProjectNewForm(forms.ModelForm):
     def clean_department(self):
         department = self.cleaned_data['department']
         workspace = self.cleaned_data['workspace']
-        if department != None:
+        if department is not None:
             if department.workspace != workspace:
                 raise ValidationError("Подразделение не относится к выбранному рабочему пространству")
         return department
@@ -204,3 +203,4 @@ class SelectionProjectsForm(forms.Form):
     owner = forms.ModelChoiceField(queryset=User.objects.filter(is_superuser=False), required=False,
                                    empty_label='Автор',
                                    widget=forms.Select(attrs={"class": "form-select form-select-sm taskboard_sidebar_select"}))
+    

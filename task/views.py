@@ -1,20 +1,20 @@
+import json
+import datetime
+import locale
 from django.shortcuts import render, redirect, get_object_or_404
-from django.views.generic import ListView, DetailView, CreateView, UpdateView
+from django.views.generic import ListView, DetailView, CreateView
 from django.urls import reverse_lazy
 from django.contrib import messages
-
-from .models import Task, Project, User, Task_Status, Project_Status, Task_Dispute, Task_Members, Project_Members, User_Rights, Task_New_Messages
-from .forms import *
-
-import json
 from django.http import HttpResponseRedirect, JsonResponse
 from django.contrib.auth import login, logout
 
-from .views_utils import vu_get_task_members, vu_get_tasks_final_table, vu_get_start_date, Selection_Utils, User_Rights_Utils, Project_Utils, Task_Utils
+import task.forms as task_forms
 
-import datetime
-import locale
+from task.logic import task_filters, project_filters, task_disputes, common_filters, form_selections, user_rights
+from task.models import Department, Task, Project, User, Task_Status, Project_Status, Task_Dispute, Task_Members, Project_Members, User_Rights, Workspace
+
 locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
+
 
 # Служебные функции
 
@@ -34,17 +34,17 @@ def append_filter_to_request_text(line, text_filter):
 
 def user_login(request):
 
-    if request.user.is_authenticated == True:
+    if request.user.is_authenticated is True:
         return redirect('tasks')
 
     if request.method == 'POST':
-        form = UserLoginForm(data=request.POST)
+        form = task_forms.UserLoginForm(data=request.POST)
         if form.is_valid():
             user = form.get_user()
             login(request,user)
             return redirect('tasks')
     else:
-        form = UserLoginForm()
+        form = task_forms.UserLoginForm()
 
     return render(request, 'task/login.html', {"form": form})
 
@@ -53,15 +53,14 @@ def user_logout(request):
     return redirect('login')
 
 # Функции views
-
-class get_projects(ListView):
+class GetProjects(ListView):
     model = Project
     template_name = 'task/project_list.html'
     context_object_name = 'projects'
 
     def get(self, request, *args, **kwargs):
 
-        if request.user.is_authenticated == False:
+        if request.user.is_authenticated is False:
             return redirect('login')
 
         user_right = User_Rights.objects.get(user=request.user).role
@@ -91,19 +90,19 @@ class get_projects(ListView):
                 selection_line = ""
 
                 # Если включен только второй чек, а первый выключен, то запрос по проектам не формируем
-                if not (quick_selection_data['check_1'] == False and quick_selection_data['check_2'] == True):
+                if not (quick_selection_data['check_1'] is False and quick_selection_data['check_2'] is True):
 
                     # Отбор по периоду
                     type_of_period = quick_selection_data['period']
                     if type_of_period != 'clean_period':
                         end_date = datetime.date.today()
-                        start_date = vu_get_start_date(type_of_period, end_date)
+                        start_date = common_filters.get_start_date(type_of_period, end_date)
                         selection_list.append(start_date)
                         selection_list.append(end_date + datetime.timedelta(days=1))
                         selection_line = " WHERE created_at BETWEEN %s AND %s "
 
                     # filter by owner
-                    if quick_selection_data['check_1'] == True:
+                    if quick_selection_data['check_1'] is True:
                         selection_line = append_filter_to_request_text(selection_line, 'owner_id = %s')
                         selection_list.append(request.user.id)
                     else:
@@ -111,10 +110,10 @@ class get_projects(ListView):
                             selection_line = append_filter_to_request_text(selection_line, 'owner_id = %s')
                             selection_list.append(selection_data["owner"])
 
-                    if quick_selection_data['is_active'] == True:
+                    if quick_selection_data['is_active'] is True:
                         selection_line = selection_line_compound(selection_line)
                         selection_line += 'status_id = 1'
-                    elif quick_selection_data['is_completed'] == True:
+                    elif quick_selection_data['is_completed'] is True:
                         selection_line = selection_line_compound(selection_line)
                         selection_line += 'status_id = 2'
 
@@ -122,8 +121,8 @@ class get_projects(ListView):
                         # print(f'{key}: {selection_data[key]}')
                         if key == "owner":
                             continue
-                        if (quick_selection_data['check_1'] == True or quick_selection_data[
-                            'check_2'] == True) and key == "status":
+                        if (quick_selection_data['check_1'] is True or quick_selection_data[
+                            'check_2'] is True) and key == "status":
                             continue
                         if selection_data[key] != "":
                             selection_line = append_filter_to_request_text(selection_line, f'{key}_id = %s')
@@ -131,16 +130,16 @@ class get_projects(ListView):
 
 
                     if user_right.id == 1:  # Полные права
-                        projects = Project_Utils.get_user_projects_and_tasks_full_rights([], request.user.id, selection_line, selection_list)
+                        projects = project_filters.get_user_projects_and_tasks_full_rights([], request.user.id, selection_line, selection_list)
                     else:
-                        projects = Project_Utils.get_user_projects_and_tasks(request.user.id, selection_line, selection_list)
+                        projects = project_filters.get_user_projects_and_tasks(request.user.id, selection_line, selection_list)
 
-                if quick_selection_data['check_2'] == True:
-
+                if quick_selection_data['check_2'] is True:
+                    print(f"user_id: {request.user.id}")
                     # Запрос по участникам проекта
                     filters = {'quick_selection': quick_selection_data, 'selection_data': selection_data,
                                'current_user': request.user.id}
-                    projects = Project_Utils.get_project_members(filters, request.user.id, user_right.id, projects)
+                    projects = project_filters.get_project_members(filters, request.user.id, user_right.id, projects)
 
                 projects.sort(key=lambda dictionary: dictionary['created_at'], reverse=True)
 
@@ -148,11 +147,11 @@ class get_projects(ListView):
 
         else:
 
-            selection_form = SelectionProjectsForm()
+            selection_form = task_forms.SelectionProjectsForm()
 
             # Установим фильтры на селекторы
 
-            workspace_list = Selection_Utils.get_user_workspaces_list(request.user)
+            workspace_list = form_selections.get_user_workspaces_list(request.user)
 
             workspace_qs = Workspace.objects.filter(pk__in=workspace_list)
             selection_form.fields['workspace'].queryset = workspace_qs
@@ -160,15 +159,15 @@ class get_projects(ListView):
             department_qs = Department.objects.filter(workspace__pk__in=workspace_list)
             selection_form.fields['department'].queryset = department_qs
 
-            users_qs = Selection_Utils.get_users_by_workspace(workspace_list)
+            users_qs = form_selections.get_users_by_workspace(workspace_list)
             selection_form.fields['owner'].queryset = users_qs
 
             # ----------------------------------------------------------------------------
 
             if user_right.id == 1:  # Полные права
-                projects = Project_Utils.get_user_projects_and_tasks_full_rights([],request.user.id,"",[])
+                projects = project_filters.get_user_projects_and_tasks_full_rights([],request.user.id,"",[])
             else:  # Показываем только те, где участник либо автор
-                projects = Project_Utils.get_user_projects_and_tasks(request.user.id,"",[])
+                projects = project_filters.get_user_projects_and_tasks(request.user.id,"",[])
 
             projects.sort(key=lambda dictionary: dictionary['created_at'], reverse=True)
 
@@ -178,19 +177,19 @@ class get_projects(ListView):
 
 def get_project_main(request, pk):
 
-    if request.user.is_authenticated == False:
+    if request.user.is_authenticated is False:
         return redirect('login')
 
     project_item = get_object_or_404(Project, pk=pk)
     current_user = request.user
 
     # Проверим доступ к проекту
-    have_access_to_project = User_Rights_Utils.check_permissions_on_project(project_item, request.user)
-    if have_access_to_project['access'] != True:
+    have_access_to_project = user_rights.check_permissions_on_project(project_item, request.user)
+    if have_access_to_project['access'] is not True:
         return render(request, 'task/blank_main.html', have_access_to_project)
 
     # Получим права доступа к реквизитам формы
-    input_right = User_Rights_Utils.get_input_right('project', project_item, current_user.id)
+    input_right = user_rights.get_input_right('project', project_item, current_user.id)
 
     # Если доступ есть, работаем с проектом
     is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
@@ -202,7 +201,7 @@ def get_project_main(request, pk):
             members = []
             members_qs = Project_Members.objects.filter(project=pk).order_by('pk')
             for item in members_qs:
-                members.append({'id': item.id, 'user': '{} {}'.format(item.user.last_name, item.user.first_name)})
+                members.append({'id': item.id, 'user': f"{item.user.last_name} {item.user.first_name}"})
 
             return JsonResponse({'context': members})
 
@@ -243,8 +242,8 @@ def get_project_main(request, pk):
             if project_item.status == status_closed:
                 return redirect(project_item.get_absolute_url_main())
 
-            form_project = ProjectForm(request.POST)
-            form_members = MembersTaskForm(request.POST)
+            form_project = task_forms.ProjectForm(request.POST)
+            form_members = task_forms.MembersTaskForm(request.POST)
 
             if form_project.is_valid():
 
@@ -272,7 +271,7 @@ def get_project_main(request, pk):
                 return redirect(project_item.get_absolute_url_main())
 
         if request.method == 'GET':
-            form_project = ProjectForm(initial={
+            form_project = task_forms.ProjectForm(initial={
                 'title': project_item.title,
                 'description': project_item.description,
                 'workspace': project_item.workspace,
@@ -287,39 +286,39 @@ def get_project_main(request, pk):
             form_project.fields['department'].queryset = Department.objects.filter(workspace__pk=project_item.workspace.id)
 
             # Форма участников проекта
-            form_members = MembersTaskForm(initial={
+            form_members = task_forms.MembersTaskForm(initial={
                 'user': None,
             })
-            users_qs = Selection_Utils.get_users_by_workspace([project_item.workspace.id, ])
+            users_qs = form_selections.get_users_by_workspace([project_item.workspace.id, ])
             form_members.fields['user'].queryset = users_qs
 
         members = Project_Members.objects.filter(project__pk=pk)
 
         return render(request, 'task/project_main.html', {'form': form_project, 'project_item': project_item, 'form_members': form_members, 'members': members, 'input_right': input_right})
 
-class get_project_tasks(DetailView):
+class GetProjectTasks(DetailView):
     model = Project
     template_name = 'task/project_tasks.html'
     context_object_name = 'project_item'
 
     def get(self, request, *args, **kwargs):
 
-        if request.user.is_authenticated == False:
+        if request.user.is_authenticated is False:
             return redirect('login')
 
         current_project = Project.objects.get(pk=self.kwargs['pk'])
 
-        have_access_to_project = User_Rights_Utils.check_permissions_on_project(current_project, request.user)
-        if have_access_to_project['access'] != True:
+        have_access_to_project = user_rights.check_permissions_on_project(current_project, request.user)
+        if have_access_to_project['access'] is not True:
             return render(request, 'task/blank_main.html', have_access_to_project)
 
         user_right = User_Rights.objects.get(user=request.user).role
         if user_right.id == 1: # Полные права
             tasks_qs = Task.objects.filter(project=current_project)
         else:
-            tasks_qs = Project_Utils.get_user_project_tasks(current_project.id, self.request.user.id)
+            tasks_qs = project_filters.get_user_project_tasks(current_project.id, self.request.user.id)
 
-        tasks_table = Task_Utils.get_tasks_table(request.user.id, tasks_qs)
+        tasks_table = task_filters.get_tasks_table(request.user.id, tasks_qs)
 
         context = {}
         context['project_item'] = current_project
@@ -327,10 +326,10 @@ class get_project_tasks(DetailView):
 
         return render(request, self.template_name, context)
 
-class add_new_project(CreateView):
+class AddNewProject(CreateView):
 
     model = Project
-    form_class = ProjectNewForm
+    form_class = task_forms.ProjectNewForm
     template_name = 'task/new_project.html'
 
     def form_valid(self, form):
@@ -347,7 +346,7 @@ class add_new_project(CreateView):
 
     def get(self, request, *args, **kwargs):
 
-        if request.user.is_authenticated == False:
+        if request.user.is_authenticated is False:
             return redirect('login')
 
         is_ajax = request.headers.get('Y-Requested-With') == 'XMLHttpRequest'
@@ -363,16 +362,15 @@ class add_new_project(CreateView):
                 department_qs = Department.objects.filter(workspace__pk=selection_data['workspace'])
                 for item_department in department_qs:
                     departments.append({'id': item_department.id,
-                                        'title': "{} : {}".format(item_department.workspace.title,
-                                                                  item_department.title)})
+                                        'title': f"{item_department.workspace.title} {item_department.title}"})
 
             return JsonResponse({'departments': departments})
 
         else:
 
-            form = ProjectNewForm()
+            form = task_forms.ProjectNewForm()
             # Установим фильтры на поля формы
-            workspace_list = Selection_Utils.get_user_workspaces_list(request.user)
+            workspace_list = form_selections.get_user_workspaces_list(request.user)
             form.fields['workspace'].queryset = Workspace.objects.filter(pk__in=workspace_list)
             form.fields['department'].queryset = Department.objects.filter(workspace__pk__in=workspace_list)
 
@@ -381,8 +379,9 @@ class add_new_project(CreateView):
 
 def get_tasks(request):
 
-    if request.user.is_authenticated == False:
+    if request.user.is_authenticated is False:
         return redirect('login')
+
 
     user_right = User_Rights.objects.get(user=request.user).role
 
@@ -408,7 +407,7 @@ def get_tasks(request):
             tasks = []
 
             # Если включен только третий чек, а остальные выключены, то запрос по задачам не формируем
-            if not ((quick_selection_data['check_1'] == False and quick_selection_data['check_2'] == False) and quick_selection_data['check_3'] == True):
+            if not ((quick_selection_data['check_1'] is False and quick_selection_data['check_2'] is False) and quick_selection_data['check_3'] is True):
 
                 # Собираем текст запроса к модели Task
                 selection_line = ""
@@ -419,18 +418,18 @@ def get_tasks(request):
                 type_of_period = quick_selection_data['period']
                 if type_of_period != 'clean_period':
                     end_date = datetime.date.today()
-                    start_date = vu_get_start_date(type_of_period, end_date)
+                    start_date = common_filters.get_start_date(type_of_period, end_date)
                     selection_list.append(start_date)
                     selection_list.append(end_date + datetime.timedelta(days=1))
                     selection_line = ' AND created_at BETWEEN %s AND %s '
 
-                if quick_selection_data['check_1'] == True and quick_selection_data['check_2'] == True:
+                if quick_selection_data['check_1'] is True and quick_selection_data['check_2'] is True:
                     selection_line += ' AND (owner_id = %s or executor_id = %s) '
                     selection_list.append(request.user.id)
                     selection_list.append(request.user.id)
                 else:
                     # filter by owner
-                    if quick_selection_data['check_1'] == True:
+                    if quick_selection_data['check_1'] is True:
                         selection_line += ' AND owner_id = %s '
                         selection_list.append(request.user.id)
                     else:
@@ -438,7 +437,7 @@ def get_tasks(request):
                             selection_line += ' AND owner_id = %s '
                             selection_list.append(selection_data["owner"])
                     # filter by executor
-                    if quick_selection_data['check_2'] == True:
+                    if quick_selection_data['check_2'] is True:
                         selection_line += ' AND executor_id = %s '
                         selection_list.append(request.user.id)
                     else:
@@ -446,16 +445,16 @@ def get_tasks(request):
                             selection_line += ' AND executor_id = %s '
                             selection_list.append(selection_data["executor"])
 
-                if quick_selection_data['is_active'] == True:
+                if quick_selection_data['is_active'] is True:
                     selection_line += ' AND status_id in (1,2) '
-                elif quick_selection_data['is_completed'] == True:
+                elif quick_selection_data['is_completed'] is True:
                     selection_line += ' AND status_id in (3,5) '
 
                 for key in selection_data:
                     # print(f'{key}: {selection_data[key]}')
                     if key == "owner" or key == "executor":
                         continue
-                    if (quick_selection_data['check_1'] == True or quick_selection_data['check_2'] == True) and key == "status":
+                    if (quick_selection_data['check_1'] is True or quick_selection_data['check_2'] is True) and key == "status":
                         continue
                     if selection_data[key] != "":
                         selection_line += f' AND {key}_id = %s'
@@ -463,14 +462,14 @@ def get_tasks(request):
 
                 # Формируем запросы к БД
 
-                tasks_qs = Task_Utils.get_user_tasks_selection(selection_line, selection_list, request.user.id, user_right.id)
-                tasks = vu_get_tasks_final_table(tasks, tasks_qs, "task", request.user.id)
+                tasks_qs = task_filters.get_user_tasks_selection(selection_line, selection_list, request.user.id, user_right.id)
+                tasks = task_filters.get_tasks_final_table(tasks, tasks_qs, "task", request.user.id)
 
             # Добавляем участников задачи
-            if quick_selection_data['check_3'] == True:
+            if quick_selection_data['check_3'] is True:
                 filters = {'quick_selection': quick_selection_data, 'selection_data': selection_data, 'current_user': request.user.id}
-                tasks_members_qs = vu_get_task_members(filters)
-                tasks = vu_get_tasks_final_table(tasks, tasks_members_qs, "task_members", request.user.id)
+                tasks_members_qs = task_filters.get_task_members(filters)
+                tasks = task_filters.get_tasks_final_table(tasks, tasks_members_qs, "task_members", request.user.id)
 
             tasks.sort(key=lambda dictionary: dictionary['created_at'], reverse=True)
 
@@ -478,13 +477,13 @@ def get_tasks(request):
 
     else:
 
-        selection_form = SelectionTasksForm()
+        selection_form = task_forms.SelectionTasksForm()
 
         # print(selection_form)
 
         # Установим фильтры на селекторы
 
-        workspace_list = Selection_Utils.get_user_workspaces_list(request.user)
+        workspace_list = form_selections.get_user_workspaces_list(request.user)
 
         workspace_qs = Workspace.objects.filter(pk__in=workspace_list)
         selection_form.fields['workspace'].queryset = workspace_qs
@@ -492,28 +491,28 @@ def get_tasks(request):
         department_qs = Department.objects.filter(workspace__pk__in=workspace_list)
         selection_form.fields['department'].queryset = department_qs
 
-        users_qs = Selection_Utils.get_users_by_workspace(workspace_list)
+        users_qs = form_selections.get_users_by_workspace(workspace_list)
         selection_form.fields['owner'].queryset = users_qs
         selection_form.fields['executor'].queryset = users_qs
 
-        selection_form.fields['project'].queryset = Selection_Utils.get_user_projects(request.user.id, None)
+        selection_form.fields['project'].queryset = form_selections.get_user_projects(request.user.id, None)
 
         # ----------------------------------------------------------------------------
 
         if user_right.id == 1: # Полные права
-            tasks_table = Task_Utils.get_tasks_table(request.user.id, Task.objects.all().order_by('-created_at'))
+            tasks_table = task_filters.get_tasks_table(request.user.id, Task.objects.all().order_by('-created_at'))
         else: # Показываем только те, где участник, автор либо исполнитель
-            tasks_members_qs = Task_Utils.get_user_tasks(request.user.id)
-            tasks_table = Task_Utils.get_tasks_table(request.user.id, tasks_members_qs)
+            tasks_members_qs = task_filters.get_user_tasks(request.user.id)
+            tasks_table = task_filters.get_tasks_table(request.user.id, tasks_members_qs)
             tasks_table.sort(key=lambda dictionary: dictionary['created_at'], reverse=True)
 
-        context = {'selection': selection_form, 'tasks': tasks_table}        
+        context = {'selection': selection_form, 'tasks': tasks_table}
 
         return render(request, 'task/task_list.html', context)
 
 def add_new_task(request):
 
-    if request.user.is_authenticated == False:
+    if request.user.is_authenticated is False:
         return redirect('login')
 
     is_ajax = request.headers.get('Y-Requested-With') == 'XMLHttpRequest'
@@ -531,19 +530,18 @@ def add_new_task(request):
                 department_qs = Department.objects.filter(workspace__pk=selection_data['workspace'])
                 for item_department in department_qs:
                     departments.append({'id': item_department.id,
-                                        'title': "{} : {}".format(item_department.workspace.title,
-                                                                  item_department.title)})
+                                        'title': f"{item_department.workspace.title} {item_department.title}"})
 
             users = []
-            users_qs = Selection_Utils.get_users_by_workspace(list(selection_data['workspace']))
+            users_qs = form_selections.get_users_by_workspace(list(selection_data['workspace']))
             for item_user in users_qs:
-                users.append({'id': item_user.id, 'title': '{} {}'.format(item_user.last_name, item_user.first_name)})
+                users.append({'id': item_user.id, 'title': f"{item_user.last_name} {item_user.first_name}"})
 
             projects = []
             if selection_data['workspace'] != "" and selection_data['department'] != "":
 
                 filters = {'workspace': selection_data['workspace'], 'department': selection_data['department']}
-                projects_qs = Selection_Utils.get_user_projects(request.user.id, filters)
+                projects_qs = form_selections.get_user_projects(request.user.id, filters)
                 for item_project in projects_qs:
                     projects.append({'id': item_project.id, 'title': item_project.title})
 
@@ -553,7 +551,7 @@ def add_new_task(request):
 
         if request.method == 'POST':
 
-            form = TaskNewForm(request.POST)
+            form = task_forms.TaskNewForm(request.POST)
 
             owner = request.user
             status = Task_Status.objects.get(pk=1)
@@ -575,14 +573,14 @@ def add_new_task(request):
                 return redirect(task.get_absolute_url_main())
 
         else:
-            form = TaskNewForm()
+            form = task_forms.TaskNewForm()
 
             # Установим фильтры на поля формы
-            workspace_list = Selection_Utils.get_user_workspaces_list(request.user)
+            workspace_list = form_selections.get_user_workspaces_list(request.user)
             form.fields['workspace'].queryset = Workspace.objects.filter(pk__in=workspace_list)
             form.fields['department'].queryset = Department.objects.filter(workspace__pk__in=workspace_list)
             if len(workspace_list) == 1:
-                form.fields['executor'].queryset = Selection_Utils.get_users_by_workspace(workspace_list)
+                form.fields['executor'].queryset = form_selections.get_users_by_workspace(workspace_list)
             else:
                 form.fields['executor'].queryset = User.objects.filter(pk=0)
             form.fields['project'].queryset = Project.objects.filter(pk=0)
@@ -591,32 +589,32 @@ def add_new_task(request):
 
 def get_task_main(request, pk):
 
-    if request.user.is_authenticated == False:
+    if request.user.is_authenticated is False:
         return redirect('login')
 
     task_item = get_object_or_404(Task, pk=pk)
     current_user = request.user
 
     # Проверим доступ к задаче
-    have_access_to_task = User_Rights_Utils.check_permissions_on_task(task_item, request.user)
-    if have_access_to_task['access'] != True:
+    have_access_to_task = user_rights.check_permissions_on_task(task_item, request.user)
+    if have_access_to_task['access'] is not True:
         return render(request, 'task/blank_main.html', have_access_to_task)
 
     # Посчитаем количество непрочитанных сообщений
     related_task_message = task_item.related_task_message.filter(user=request.user).first()
-    if related_task_message == None:
+    if related_task_message is None:
         new_messages = 0
     else:
         new_messages = related_task_message.new_messages
 
     # Получим права доступа к реквизитам формы
-    input_right = User_Rights_Utils.get_input_right('task', task_item, current_user.id)
+    input_right = user_rights.get_input_right('task', task_item, current_user.id)
 
     # Если доступ есть, работаем с задачей
     is_ajax_members = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
     is_ajax_fields = request.headers.get('Y-Requested-With') == 'XMLHttpRequest'
 
-    is_ajax = is_ajax_members == True or is_ajax_fields == True
+    is_ajax = is_ajax_members is True or is_ajax_fields is True
 
     if is_ajax:
 
@@ -628,7 +626,7 @@ def get_task_main(request, pk):
                 members = []
                 members_qs = Task_Members.objects.filter(task__pk=pk).order_by('pk')
                 for item in members_qs:
-                    members.append({'id': item.id, 'user': '{} {}'.format(item.user.last_name, item.user.first_name)})
+                    members.append({'id': item.id, 'user': f"{item.user.last_name} {item.user.first_name}"})
 
                 return JsonResponse({'context': members})
 
@@ -686,7 +684,7 @@ def get_task_main(request, pk):
                 if selection_data['workspace'] != "" and selection_data['department'] != "":
 
                     filters = {'workspace': selection_data['workspace'], 'department': selection_data['department']}
-                    projects_qs = Selection_Utils.get_user_projects(request.user.id, filters)
+                    projects_qs = form_selections.get_user_projects(request.user.id, filters)
                     for item_project in projects_qs:
                         projects.append({'id': item_project.id, 'title': item_project.title})
 
@@ -703,11 +701,11 @@ def get_task_main(request, pk):
                 return redirect(task_item.get_absolute_url_main())
 
             if task_item.owner.id == current_user.id:
-                form_task = TaskForm(request.POST)
+                form_task = task_forms.TaskForm(request.POST)
             else:
-                form_task = TaskFormExecutor(request.POST)
+                form_task = task_forms.TaskFormExecutor(request.POST)
 
-            form_members = MembersTaskForm(request.POST)
+            form_members = task_forms.MembersTaskForm(request.POST)
 
             if form_task.is_valid():
                 task = Task.objects.get(pk=pk)
@@ -725,7 +723,7 @@ def get_task_main(request, pk):
                 return redirect(task_item.get_absolute_url_main())
         else:
             # Передаем данные в форму
-            form_task = TaskForm(initial={
+            form_task = task_forms.TaskForm(initial={
                 'title': task_item.title,
                 'description': task_item.description,
                 'workspace': task_item.workspace,
@@ -741,16 +739,16 @@ def get_task_main(request, pk):
 
             # Установим фильтры на поля формы
 
-            available_users = Selection_Utils.get_users_by_workspace([task_item.workspace.id,])
+            available_users = form_selections.get_users_by_workspace([task_item.workspace.id,])
 
             form_task.fields['department'].queryset = Department.objects.filter(workspace__pk=task_item.workspace.id)
             form_task.fields['executor'].queryset = available_users
 
             filters = {'workspace': task_item.workspace.id, 'department': task_item.department.id}
-            form_task.fields['project'].queryset = Selection_Utils.get_user_projects(task_item.owner.id, filters)
+            form_task.fields['project'].queryset = form_selections.get_user_projects(task_item.owner.id, filters)
 
             # Форма участников проекта
-            form_members = MembersTaskForm(initial={
+            form_members = task_forms.MembersTaskForm(initial={
                 'user': None,
             })
             users_qs = available_users
@@ -762,15 +760,15 @@ def get_task_main(request, pk):
 
 def get_task_chat_def(request, pk):
 
-    if request.user.is_authenticated == False:
+    if request.user.is_authenticated is False:
         return redirect('login')
 
     # Проверим доступ к задаче
     current_task = Task.objects.get(pk=pk)
     current_user = request.user
 
-    have_access_to_task = User_Rights_Utils.check_permissions_on_task(current_task, current_user)
-    if have_access_to_task['access'] != True:
+    have_access_to_task = user_rights.check_permissions_on_task(current_task, current_user)
+    if have_access_to_task['access'] is not True:
         return render(request, 'task/blank_main.html', have_access_to_task)
 
     is_task_closed = True if current_task.status.id == 3 or current_task.status.id == 5 else False
@@ -783,7 +781,7 @@ def get_task_chat_def(request, pk):
 
         if request.method == 'GET':
 
-            result = Task_Utils.get_task_dispute(pk)
+            result = task_disputes.get_task_dispute(pk)
             return JsonResponse({'context': result['dispute']})
 
         if request.method == 'POST':
@@ -802,18 +800,18 @@ def get_task_chat_def(request, pk):
                 message_id = data.get('id')
 
             if int(message_id) > 0:
-                reply_message = Task_Dispute.objects.get(pk=message_id);
+                reply_message = Task_Dispute.objects.get(pk=message_id)
                 reply_user = reply_message.user
                 if reply_message.in_reply_task_dispute > 0:
-                    main_message_id = reply_message.in_reply_task_dispute;
+                    main_message_id = reply_message.in_reply_task_dispute
                 else:
                     main_message_id = message_id
 
             new_message = Task_Dispute.objects.create(task=current_task, user=current_user, content=content, in_reply_task_dispute=main_message_id, in_reply_user=reply_user, file=file)
 
-            new_message_dict = Task_Utils.get_current_message_dict(new_message)
+            new_message_dict = task_disputes.get_current_message_dict(new_message)
 
-            Task_Utils.add_task_count_messages(current_task, current_user)
+            task_filters.add_task_count_messages(current_task, current_user)
 
             return JsonResponse({'status': 'Message added!', 'message': new_message_dict, 'user_id': current_user.id}, safe=False)
 
@@ -822,8 +820,9 @@ def get_task_chat_def(request, pk):
     else:
 
         task_item = get_object_or_404(Task, pk=pk)
-        result = Task_Utils.get_task_dispute(pk)
+        result = task_disputes.get_task_dispute(pk)
 
-        Task_Utils.clean_task_count_messages(current_task, request.user)
+        task_filters.clean_task_count_messages(current_task, request.user)
 
         return render(request, 'task/task_chat.html', {'dispute': result['dispute'], 'task_item': task_item, 'message_quantity': result['message_quantity'], 'user_id': current_user.id, 'is_task_closed': is_task_closed})
+    
