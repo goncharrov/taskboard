@@ -218,89 +218,74 @@ def get_start_date(type_of_period, end_date):
 
     return start_date
 
-
 def get_task_members(filters):
-    selection_list = []
 
     type_of_period = filters['quick_selection']['period']
+    end_date = datetime.date.today() if type_of_period != 'clean_period' else None
+    start_date = get_start_date(type_of_period, end_date) if type_of_period != 'clean_period' else None
 
-    if type_of_period != 'clean_period':
-        end_date = datetime.date.today()
-        start_date = get_start_date(type_of_period, end_date)
-        selection_list.append(start_date)
-        selection_list.append(end_date)
-
-    # Добавляем в отбор текущего пользователя
-    selection_list.append(filters['current_user'])
-
-    workspace_id = filters['selection_data']['workspace']
-    if workspace_id != "":
-        selection_list.append(workspace_id)
-
-    department_id = filters['selection_data']['department']
-    if department_id != "":
-        selection_list.append(department_id)
+    workspace_id = filters['selection_data']['workspace'] if filters['selection_data']['workspace'] != "" else None    
+    department_id = filters['selection_data']['department'] if filters['selection_data']['department'] != "" else None
+    project_id = filters['selection_data']['project'] if filters['selection_data']['project'] != "" else None
 
     is_active = filters['quick_selection']['is_active']
     is_completed = filters['quick_selection']['is_completed']
-
-    selection_status = ''
-    if is_active is True:
-        selection_status = 'AND tasks.status_id in (1,2,4)'
-    elif is_completed is True:
-        selection_status = 'AND tasks.status_id in (3,5)'
-    else:
-        status_id = filters['selection_data']['status']
-        if status_id != "":
-            selection_status = 'AND tasks.status_id = %s'
-            selection_list.append(status_id)
-
-    project_id = filters['selection_data']['project']
-    if project_id != "":
-        selection_list.append(project_id)
+    status_id = filters['selection_data']['status'] if filters['selection_data']['status'] != "" else None
 
     check_1 = filters['quick_selection']['check_1']
     check_2 = filters['quick_selection']['check_2']
+    owner_id = filters['selection_data']['owner'] if filters['selection_data']['owner'] != "" else None
+    executor_id = filters['selection_data']['executor'] if filters['selection_data']['executor'] != "" else None
 
-    owner_id = filters['selection_data']['owner']
-    if check_1 is not True:
-        if owner_id != "":
-            selection_list.append(owner_id)
+    request_text = '''
+        SELECT 
+            taskmembers.id,
+            taskmembers.task_id
+        FROM 
+            task_task_members taskmembers,
+            task_task tasks
+        WHERE
+            taskmembers.task_id = tasks.id
+            AND taskmembers.user_id = %(current_user)s
+            AND (%(start_date)s IS NULL OR tasks.created_at >= %(start_date)s)
+            AND (%(end_date)s IS NULL OR tasks.created_at <= %(end_date)s)
+            AND (%(workspace_id)s IS NULL OR tasks.workspace_id = %(workspace_id)s)
+            AND (%(department_id)s IS NULL OR tasks.department_id = %(department_id)s)
+            AND (%(project_id)s IS NULL OR tasks.project_id = %(project_id)s)
+            AND CASE 
+                    WHEN  %(check_1)s IS FALSE THEN (%(owner_id)s IS NULL OR tasks.owner_id = %(owner_id)s)
+                END
+            AND CASE 
+                    WHEN  %(check_2)s IS FALSE THEN (%(executor_id)s IS NULL OR tasks.executor_id = %(executor_id)s)
+                END            
+            AND CASE 
+                    WHEN %(is_active)s IS TRUE THEN tasks.status_id in (1,2,4)
+                    WHEN %(is_completed)s IS TRUE THEN tasks.status_id in (3,5)
+                    ELSE (%(status_id)s IS NULL OR tasks.status_id = %(status_id)s)
+                END
 
-    executor_id = filters['selection_data']['executor']
-    if check_2 is not True:
-        if executor_id != "":
-            selection_list.append(executor_id)
+        GROUP by
+            taskmembers.id,
+            taskmembers.task_id     
 
-    ### !!! id (первый селектор) обязательно должно быть тексте при ручном указании полей (не *)
-    ### соединение сделано, что бы обратиться к полям задачи в условиия, в task_task_members к ним не обратиться
-    request_text = f"""
-                select 
-                    taskmembers.id, 
-                    taskmembers.task_id    
-                FROM 
-                    task_task_members taskmembers,
-                    task_task tasks                
-                WHERE
-                    taskmembers.task_id = tasks.id
-                    {'AND tasks.created_at BETWEEN %s AND %s' if type_of_period != 'clean_period' else ''}  
-                    AND taskmembers.user_id = %s                      
-                    {'AND tasks.workspace_id = %s' if workspace_id != "" else ''}    
-                    {'AND tasks.department_id = %s' if department_id != "" else ''} 
-                    {selection_status if selection_status != '' else ''}
-                    {'AND tasks.project_id = %s' if project_id != "" else ''}
-                    {'AND tasks.owner_id = %s' if owner_id != "" else ''}
-                    {'AND tasks.executor_id = %s' if executor_id != "" else ''}
-                GROUP by
-                    taskmembers.id,
-                    taskmembers.task_id                              
-                """
+    '''
 
-    # print(request_text)
+    selections: dict = {
+        'current_user': filters['current_user'],
+        'start_date': start_date,
+        'end_date': end_date,
+        'workspace_id': workspace_id,
+        'department_id': department_id,
+        'project_id': project_id,
+        'check_1': check_1,
+        'check_2': check_2,        
+        'owner_id': owner_id,
+        'executor_id': executor_id,
+        'is_active': is_active,
+        'is_completed': is_completed,
+        'status_id': status_id
+    }
 
-    tasks_members_qs = Task_Members.objects.raw(request_text, selection_list)
-    # print("Выборка по Task_Members")
-    # for task_item in tasks_members_qs:
-    #     print(task_item.task.title, task_item.task.owner)
+    tasks_members_qs = Task_Members.objects.raw(request_text, params=selections)
 
     return tasks_members_qs
