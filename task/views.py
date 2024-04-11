@@ -128,8 +128,7 @@ class GetProjects(ListView):
                             selection_line = append_filter_to_request_text(selection_line, f'{key}_id = %s')
                             selection_list.append(selection_data[key])
 
-
-                    if user_right.id == 1:  # Полные права
+                    if user_right.is_full:
                         projects = project_filters.get_user_projects_and_tasks_full_rights([], request.user.id, selection_line, selection_list)
                     else:
                         projects = project_filters.get_user_projects_and_tasks(request.user.id, selection_line, selection_list)
@@ -164,9 +163,9 @@ class GetProjects(ListView):
 
             # ----------------------------------------------------------------------------
 
-            if user_right.id == 1:  # Полные права
+            if user_right.is_full:
                 projects = project_filters.get_user_projects_and_tasks_full_rights([],request.user.id,"",[])
-            else:  # Показываем только те, где участник либо автор
+            else:
                 projects = project_filters.get_user_projects_and_tasks(request.user.id,"",[])
 
             projects.sort(key=lambda dictionary: dictionary['created_at'], reverse=True)
@@ -313,12 +312,12 @@ class GetProjectTasks(DetailView):
             return render(request, 'task/blank_main.html', have_access_to_project)
 
         user_right = User_Rights.objects.get(user=request.user).role
-        if user_right.id == 1: # Полные права
+        if user_right.is_full:
             tasks_qs = Task.objects.filter(project=current_project)
         else:
             tasks_qs = project_filters.get_user_project_tasks(current_project.id, self.request.user.id)
 
-        tasks_table = task_filters.get_tasks_table(request.user.id, tasks_qs)
+        tasks_table = task_filters.get_tasks_seriales_data([], tasks_qs, "task", request.user.id)
 
         context = {}
         context['project_item'] = current_project
@@ -382,7 +381,7 @@ def get_tasks(request):
     if request.user.is_authenticated is False:
         return redirect('login')
 
-
+    tasks = []
     user_right = User_Rights.objects.get(user=request.user).role
 
     is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
@@ -400,76 +399,22 @@ def get_tasks(request):
             quick_selection_data['check_2'] = False if quick_selection_data['check_2'] == "off" else True
             quick_selection_data['check_3'] = False if quick_selection_data['check_3'] == "off" else True
 
-            # Отборы
+            # Селекторы
             selection = request.headers.get('selection')
             selection_data = json.loads(selection)
 
-            tasks = []
+            filters = {'quick_selection': quick_selection_data, 'selection_data': selection_data, 'current_user': request.user.id}
+            filters_data = task_filters.get_form_task_filters(filters)            
 
             # Если включен только третий чек, а остальные выключены, то запрос по задачам не формируем
             if not ((quick_selection_data['check_1'] is False and quick_selection_data['check_2'] is False) and quick_selection_data['check_3'] is True):
-
-                # Собираем текст запроса к модели Task
-                selection_line = ""
-                selection_list = []
-
-                # Отбор по периоду
-
-                type_of_period = quick_selection_data['period']
-                if type_of_period != 'clean_period':
-                    end_date = datetime.date.today()
-                    start_date = common_filters.get_start_date(type_of_period, end_date)
-                    selection_list.append(start_date)
-                    selection_list.append(end_date + datetime.timedelta(days=1))
-                    selection_line = ' AND created_at BETWEEN %s AND %s '
-
-                if quick_selection_data['check_1'] is True and quick_selection_data['check_2'] is True:
-                    selection_line += ' AND (owner_id = %s or executor_id = %s) '
-                    selection_list.append(request.user.id)
-                    selection_list.append(request.user.id)
-                else:
-                    # filter by owner
-                    if quick_selection_data['check_1'] is True:
-                        selection_line += ' AND owner_id = %s '
-                        selection_list.append(request.user.id)
-                    else:
-                        if selection_data["owner"] != "":
-                            selection_line += ' AND owner_id = %s '
-                            selection_list.append(selection_data["owner"])
-                    # filter by executor
-                    if quick_selection_data['check_2'] is True:
-                        selection_line += ' AND executor_id = %s '
-                        selection_list.append(request.user.id)
-                    else:
-                        if selection_data["executor"] != "":
-                            selection_line += ' AND executor_id = %s '
-                            selection_list.append(selection_data["executor"])
-
-                if quick_selection_data['is_active'] is True:
-                    selection_line += ' AND status_id in (1,2) '
-                elif quick_selection_data['is_completed'] is True:
-                    selection_line += ' AND status_id in (3,5) '
-
-                for key in selection_data:
-                    # print(f'{key}: {selection_data[key]}')
-                    if key == "owner" or key == "executor":
-                        continue
-                    if (quick_selection_data['check_1'] is True or quick_selection_data['check_2'] is True) and key == "status":
-                        continue
-                    if selection_data[key] != "":
-                        selection_line += f' AND {key}_id = %s'
-                        selection_list.append(selection_data[key])
-
-                # Формируем запросы к БД
-
-                tasks_qs = task_filters.get_user_tasks_selection(selection_line, selection_list, request.user.id, user_right.id)
-                tasks = task_filters.get_tasks_final_table(tasks, tasks_qs, "task", request.user.id)
+                tasks_qs = task_filters.get_user_tasks_selection(filters_data, user_right)
+                tasks = task_filters.get_tasks_seriales_data(tasks, tasks_qs, "task", request.user.id)
 
             # Добавляем участников задачи
             if quick_selection_data['check_3'] is True:
-                filters = {'quick_selection': quick_selection_data, 'selection_data': selection_data, 'current_user': request.user.id}
-                tasks_members_qs = task_filters.get_task_members(filters)
-                tasks = task_filters.get_tasks_final_table(tasks, tasks_members_qs, "task_members", request.user.id)
+                tasks_members_qs = task_filters.get_task_members(filters_data)
+                tasks = task_filters.get_tasks_seriales_data(tasks, tasks_members_qs, "task_members", request.user.id)
 
             tasks.sort(key=lambda dictionary: dictionary['created_at'], reverse=True)
 
@@ -479,12 +424,8 @@ def get_tasks(request):
 
         selection_form = task_forms.SelectionTasksForm()
 
-        # print(selection_form)
-
-        # Установим фильтры на селекторы
-
+        # Заполним данные селекторов
         workspace_list = form_selections.get_user_workspaces_list(request.user)
-
         workspace_qs = Workspace.objects.filter(pk__in=workspace_list)
         selection_form.fields['workspace'].queryset = workspace_qs
 
@@ -494,16 +435,15 @@ def get_tasks(request):
         users_qs = form_selections.get_users_by_workspace(workspace_list)
         selection_form.fields['owner'].queryset = users_qs
         selection_form.fields['executor'].queryset = users_qs
-
         selection_form.fields['project'].queryset = form_selections.get_user_projects(request.user.id, None)
 
-        # ----------------------------------------------------------------------------
-
-        if user_right.id == 1: # Полные права
-            tasks_table = task_filters.get_tasks_table(request.user.id, Task.objects.all().order_by('-created_at'))
-        else: # Показываем только те, где участник, автор либо исполнитель
-            tasks_members_qs = task_filters.get_user_tasks(request.user.id)
-            tasks_table = task_filters.get_tasks_table(request.user.id, tasks_members_qs)
+        # Заполним таблицу задач
+        if user_right.is_full:
+            all_tasks_qs = Task.objects.all().order_by('-created_at')
+            tasks_table = task_filters.get_tasks_seriales_data(tasks, all_tasks_qs, "task", request.user.id)
+        else:
+            all_tasks_qs = task_filters.get_user_tasks(request.user.id)
+            tasks_table = task_filters.get_tasks_seriales_data(tasks, all_tasks_qs, "task", request.user.id)
             tasks_table.sort(key=lambda dictionary: dictionary['created_at'], reverse=True)
 
         context = {'selection': selection_form, 'tasks': tasks_table}

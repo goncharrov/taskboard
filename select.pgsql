@@ -10,3 +10,4 @@ WHERE
 GROUP by
     taskmembers.id,
     taskmembers.task_id
+    

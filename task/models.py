@@ -1,17 +1,20 @@
+# import datetime
+import locale
+from django.contrib.auth.models import User
 from django.db import models
-# from django.contrib.auth import get_user_model
 from django.urls import reverse
 from ckeditor_uploader.fields import RichTextUploadingField
 
-import datetime
-import locale
 locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
 
-from django.contrib.auth.models import User
+# from django.contrib.auth import get_user_model
 # User = get_user_model()
 
+USER_RIGHTS_FULL_ID = 1
+
+
 def get_name(self):
-    return '{} {}'.format(self.last_name, self.first_name)
+    return f'{self.last_name} {self.first_name}'
 
 User.add_to_class("__str__", get_name)
 
@@ -22,6 +25,10 @@ User.add_to_class("__str__", get_name)
 
 class User_Roles(models.Model):
     title = models.CharField(max_length=50, verbose_name='Наименование')
+
+    @property
+    def is_full(self):
+        return self.id == USER_RIGHTS_FULL_ID
 
     def __str__(self):
         return self.title
@@ -61,8 +68,7 @@ class Department(models.Model):
     workspace = models.ForeignKey(Workspace, on_delete=models.PROTECT, verbose_name='Рабочее пространство', related_name='related_department')
 
     def __str__(self):
-        return "{} : {}".format(self.workspace.title, self.title)
-        # return self.title
+        return f'{self.workspace.title} : {self.title}'
 
     class Meta:
         verbose_name = 'Подразделение'
@@ -76,7 +82,7 @@ class Workspace_Members(models.Model):
                              related_name='related_workspace_members')
 
     def __str__(self):
-        return "{} : {}".format(self.workspace.title, self.user.username)
+        return f'{self.workspace.title} : {self.user.username}'
 
     class Meta:
         verbose_name = 'Участник пространства'
@@ -132,7 +138,7 @@ class Project_Members(models.Model):
                              related_name='related_project_members')
 
     def __str__(self):
-        return "{} : {}".format(self.project.title, self.user.username)
+        return f'{self.project.title} : {self.user.username}'
 
     class Meta:
         verbose_name = 'Участник проекта'
@@ -190,7 +196,7 @@ class Task_Members(models.Model):
                              related_name='related_task_members')
 
     def __str__(self):
-        return "{} : {}".format(self.task.title, self.user.username)
+        return f'{self.task.title} : {self.user.username}'
 
     class Meta:
         verbose_name = 'Участник задачи'
@@ -205,7 +211,7 @@ class Task_Finish_Date_History(models.Model):
     finish_date = models.DateTimeField(verbose_name='Плановая дата выполнения')
 
     def __str__(self):
-        return "{} : {} : {}".format(self.task.title, self.user.name, self.finish_date)
+        return f'{self.task.title} : {self.user.name} : {self.finish_date}'
 
     class Meta:
         verbose_name = 'История изменения плановой даты выполнения'
@@ -242,7 +248,7 @@ class Unauthorized_Access_Attempts(models.Model):
     event_date = models.DateTimeField(auto_now_add=True, verbose_name='Дата события')
 
     def __str__(self):
-        return "{} : {} : {}".format(self.event_date, self.user.username, self.url)
+        return f'{self.event_date} : {self.user.username} : {self.url}'
 
     class Meta:
         verbose_name = 'Попытки несанкционированного доступа'

@@ -201,7 +201,7 @@ def get_user_projects_and_tasks(current_user_id, selection_line, selection_list)
     FROM (
         select 
             all_projects_user.id,
-            all_projects_user.workspace_id,
+            all_projects_user.workspace_id as workspace_id,
             all_projects_user.department_id as department_id,
             all_projects_user.status_id as status_id,
             all_projects_user.owner_id as owner_id,
@@ -237,7 +237,13 @@ def get_user_projects_and_tasks(current_user_id, selection_line, selection_list)
             ) as all_projects_user               
             
         GROUP by
-            all_projects_user.id) projects
+            all_projects_user.id,
+            all_projects_user.workspace_id,
+            all_projects_user.department_id,
+            all_projects_user.status_id,
+            all_projects_user.owner_id,
+            all_projects_user.created_at
+            ) projects
     LEFT JOIN (
         SELECT
             t_task.id as id,
@@ -285,7 +291,13 @@ def get_user_projects_and_tasks(current_user_id, selection_line, selection_list)
                     task_members.task_id = tasks.id                
                     AND task_members.user_id = {current_user_id}) all_tasks_user        
             GROUP by
-                    all_tasks_user.id) t_task,
+                    all_tasks_user.id,
+                    all_tasks_user.title,
+                    all_tasks_user.project_id,
+                    all_tasks_user.owner_id,
+                    all_tasks_user.executor_id,
+                    all_tasks_user.status_id                    
+                    ) t_task,
             task_task_status t_status,
             auth_user t_user_owner,
             auth_user t_user_executor
