@@ -6,50 +6,61 @@ from task.logic import common_filters
 # locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
 locale.setlocale(locale.LC_ALL, ('ru_RU', 'UTF-8'))
 
-# Все задачи по проекту, которые доступны пользователю (для view_project_tasks)
-def get_user_project_tasks(project_id, current_user_id):
 
-    request_text = """
-    
-    select 
-        all_tasks_user.id
-    FROM        
+def create_project_filters_dict(current_user) -> dict:
 
-    (select 
-        tasks.id as id   
-    FROM 
-        task_task tasks                
-    WHERE
-        tasks.project_id = %s 
-        AND (tasks.owner_id = %s or tasks.executor_id = %s)                
+    filters_data: dict = {
+        'current_user': current_user,
+        'start_date': None,
+        'end_date': None,
+        'workspace_id': None,
+        'department_id': None,
+        'check_1_my_projects': False,
+        'owner_id': None,
+        'is_active': None,
+        'is_completed': None,
+        'status_id': None
+    }
 
-    UNION ALL
+    return filters_data
 
-    select 
-        tasks.id
-    FROM
-        task_task tasks, 
-        task_task_members task_members                                   
-    WHERE
-        tasks.project_id = %s
-        AND task_members.task_id = tasks.id                                  
-        AND task_members.user_id = %s) as all_tasks_user  
 
-    GROUP by
-        all_tasks_user.id               
+def get_form_project_filters(filters, filters_data) -> dict:
 
-    """
+    current_user = filters['current_user']
+    selections = filters['selection_data']
+    quick_selections = filters['quick_selection']
 
-    selection_list = []
-    selection_list.append(project_id)
-    selection_list.append(current_user_id)
-    selection_list.append(current_user_id)
-    selection_list.append(project_id)
-    selection_list.append(current_user_id)
+    type_of_period = quick_selections['period']
+    end_date = datetime.date.today() if type_of_period != 'clean_period' else None
+    start_date = common_filters.get_start_date(type_of_period, end_date) if type_of_period != 'clean_period' else None
 
-    project_tasks_qs = Task.objects.raw(request_text, selection_list)
+    workspace_id = selections['workspace'] if selections['workspace'] != "" else None
+    department_id = selections['department'] if selections['department'] != "" else None
 
-    return project_tasks_qs
+    is_active = quick_selections['is_active']
+    is_completed = quick_selections['is_completed']
+    status_id = selections['status'] if selections['status'] != "" else None
+
+    check_1_my_projects = quick_selections['check_1_my_projects']
+
+    if check_1_my_projects is True:
+        owner_id = current_user
+    else:
+        owner_id = selections['owner'] if selections['owner'] != "" else None
+
+    filters_data['start_date'] = start_date
+    filters_data['end_date'] = end_date
+    filters_data['workspace_id'] = workspace_id
+    filters_data['department_id'] = department_id
+    filters_data['check_1_my_projects'] = check_1_my_projects
+    filters_data['owner_id'] = owner_id
+    filters_data['is_active'] = is_active
+    filters_data['is_completed'] = is_completed
+    filters_data['status_id'] = status_id
+
+    return filters_data
+
 
 def create_project_row(item):
 
@@ -66,6 +77,7 @@ def create_project_row(item):
 
     return project_to_add
 
+
 def create_task_row(item):
 
     task_to_add = {
@@ -81,7 +93,8 @@ def create_task_row(item):
 
     return task_to_add
 
-def get_final_projects_table(projects_qs, projects):
+
+def get_project_seriales_data(projects_qs, projects) -> list:
 
     first_row = True
     for item in projects_qs:
@@ -127,10 +140,11 @@ def get_final_projects_table(projects_qs, projects):
 
     return projects
 
-# Получим проекты и задачи пользователя с полными правами по умолчанию (для GET)
-def get_user_projects_and_tasks_full_rights(projects, current_user_id, selection_line, selection_list):
 
-    request_text = f"""
+# Получим проекты и задачи пользователя с полными правами
+def get_user_projects_and_tasks_full_rights(projects, filters_data) -> list:
+
+    request_text = '''
 
     SELECT        
         projects.id,
@@ -165,27 +179,41 @@ def get_user_projects_and_tasks_full_rights(projects, current_user_id, selection
             AND t_task.executor_id = t_user_executor.id   
         ) tasks  
     ON projects.id = tasks.project_id 
-    LEFT JOIN (SELECT * FROM task_task_new_messages WHERE user_id = {current_user_id}) task_new_messages
+    LEFT JOIN (SELECT * FROM task_task_new_messages WHERE user_id = %(current_user)s) task_new_messages
     ON tasks.id = task_new_messages.task_id
     
-    {selection_line} 
+    WHERE
+        projects.id > 0
+        AND (%(start_date)s IS NULL OR created_at >= %(start_date)s)
+        AND (%(end_date)s IS NULL OR created_at <= %(end_date)s)
+        AND (%(workspace_id)s IS NULL OR workspace_id = %(workspace_id)s)
+        AND (%(department_id)s IS NULL OR department_id = %(department_id)s)
+        AND CASE 
+                WHEN %(is_active)s IS TRUE THEN status_id = 1
+                WHEN %(is_completed)s IS TRUE THEN status_id = 2
+                ELSE (%(status_id)s IS NULL OR status_id = %(status_id)s)
+            END
+        AND CASE 
+                WHEN  %(check_1_my_projects)s IS FALSE THEN (%(owner_id)s IS NULL OR owner_id = %(owner_id)s)
+                ELSE owner_id = %(current_user)s
+            END             
             
     ORDER BY 
         projects.id,
         tasks.id                          
 
-    """
+    '''
 
-    projects_qs = Project.objects.raw(request_text, selection_list)
-
-    projects = get_final_projects_table(projects_qs, projects)
+    projects_qs = Project.objects.raw(request_text, params=filters_data)
+    projects = get_project_seriales_data(projects_qs, projects)
 
     return projects
 
-# Получим проекты и задачи пользователя с обычными правами по умолчанию (для GET)
-def get_user_projects_and_tasks(current_user_id, selection_line, selection_list):
 
-    request_text = f"""
+# Получим проекты и задачи пользователя с обычными правами
+def get_user_projects_and_tasks(projects, filters_data) -> list:
+
+    request_text = '''
 
     SELECT        
         projects.id,            
@@ -217,7 +245,7 @@ def get_user_projects_and_tasks(current_user_id, selection_line, selection_list)
             FROM 
                 task_project projects                
             WHERE
-                projects.owner_id = {current_user_id}      
+                projects.owner_id = %(current_user)s      
             
             UNION ALL
             
@@ -233,7 +261,7 @@ def get_user_projects_and_tasks(current_user_id, selection_line, selection_list)
                 task_project projects               
             WHERE
                 project_members.project_id = projects.id                
-                AND project_members.user_id = {current_user_id}
+                AND project_members.user_id = %(current_user)s
             ) as all_projects_user               
             
         GROUP by
@@ -273,7 +301,7 @@ def get_user_projects_and_tasks(current_user_id, selection_line, selection_list)
                 FROM 
                     task_task tasks                
                 WHERE
-                    tasks.owner_id = {current_user_id} or tasks.executor_id = {current_user_id}                
+                    tasks.owner_id = %(current_user)s or tasks.executor_id = %(current_user)s               
                 
                 UNION ALL
                 
@@ -289,7 +317,7 @@ def get_user_projects_and_tasks(current_user_id, selection_line, selection_list)
                     task_task tasks               
                 WHERE
                     task_members.task_id = tasks.id                
-                    AND task_members.user_id = {current_user_id}) all_tasks_user        
+                    AND task_members.user_id = %(current_user)s) all_tasks_user        
             GROUP by
                     all_tasks_user.id,
                     all_tasks_user.title,
@@ -307,68 +335,41 @@ def get_user_projects_and_tasks(current_user_id, selection_line, selection_list)
             AND t_task.executor_id = t_user_executor.id   
         ) tasks  
     ON projects.id = tasks.project_id 
-    LEFT JOIN (SELECT * FROM task_task_new_messages WHERE user_id = {current_user_id}) task_new_messages
-    ON tasks.id = task_new_messages.task_id 
-    
-    {selection_line}
-    
+    LEFT JOIN (SELECT * FROM task_task_new_messages WHERE user_id = %(current_user)s) task_new_messages
+    ON tasks.id = task_new_messages.task_id
+    WHERE
+        projects.id > 0
+        AND (%(start_date)s IS NULL OR created_at >= %(start_date)s)
+        AND (%(end_date)s IS NULL OR created_at <= %(end_date)s)
+        AND (%(workspace_id)s IS NULL OR workspace_id = %(workspace_id)s)
+        AND (%(department_id)s IS NULL OR department_id = %(department_id)s)
+        AND CASE 
+                WHEN %(is_active)s IS TRUE THEN status_id = 1
+                WHEN %(is_completed)s IS TRUE THEN status_id = 2
+                ELSE (%(status_id)s IS NULL OR status_id = %(status_id)s)
+            END
+        AND CASE 
+                WHEN  %(check_1_my_projects)s IS FALSE THEN (%(owner_id)s IS NULL OR owner_id = %(owner_id)s)
+                ELSE owner_id = %(current_user)s
+            END
     ORDER BY 
         projects.id,
         tasks.id                          
 
-    """
+    '''
 
-    projects_qs = Project.objects.raw(request_text, selection_list)
-    projects = get_final_projects_table(projects_qs, [])
+    projects_qs = Project.objects.raw(request_text, params=filters_data)
+    projects = get_project_seriales_data(projects_qs, projects)
 
     return projects
 
-# Получим данные по проектам, где пользовтаель является участником проекта (check_2)
-def get_project_members(filters, current_user_id, user_right_id, projects):
 
-    selection_list = []
+# Получим данные по проектам, где пользователь является участником проекта (check_2)
+def get_project_members(projects, filters_data, user_right) -> list:
 
-    type_of_period = filters['quick_selection']['period']
+    if user_right.is_full:
 
-    if type_of_period != 'clean_period':
-        end_date = datetime.date.today()
-        start_date = common_filters.get_start_date(type_of_period, end_date)
-        selection_list.append(start_date)
-        selection_list.append(end_date)
-
-    workspace_id = filters['selection_data']['workspace']
-    if workspace_id != "":
-        selection_list.append(workspace_id)
-
-    department_id = filters['selection_data']['department']
-    if department_id != "":
-        selection_list.append(department_id)
-
-    is_active = filters['quick_selection']['is_active']
-    is_completed = filters['quick_selection']['is_completed']
-
-    selection_status = ''
-    if is_active is True:
-        selection_status = ' AND projects.status_id = 1 '
-    elif is_completed is True:
-        selection_status = ' AND projects.status_id = 2 '
-    else:
-        status_id = filters['selection_data']['status']
-        if status_id != "":
-            selection_status = 'AND projects.status_id = %s'
-            selection_list.append(status_id)
-
-    check_1 = filters['quick_selection']['check_1']
-    # check_2 = filters['quick_selection']['check_2']
-
-    owner_id = filters['selection_data']['owner']
-    if check_1 is not True:
-        if owner_id != "":
-            selection_list.append(owner_id)
-
-    if user_right_id == 1:
-
-        request_text = f"""
+        request_text = '''
     
         SELECT        
             projects.id,            
@@ -394,17 +395,24 @@ def get_project_members(filters, current_user_id, user_right_id, projects):
                 task_project projects               
             WHERE
                 project_members.project_id = projects.id                
-                AND project_members.user_id = {current_user_id}
-                {'AND projects.created_at BETWEEN %s AND %s' if type_of_period != 'clean_period' else ''}  
-                {'AND projects.workspace_id = %s' if workspace_id != "" else ''}    
-                {'AND projects.department_id = %s' if department_id != "" else ''} 
-                {selection_status if selection_status != '' else ''}                      
-                {'AND projects.owner_id = %s' if owner_id != "" else ''}
+                AND project_members.user_id = %(current_user)s
+                AND (%(start_date)s IS NULL OR projects.created_at >= %(start_date)s)
+                AND (%(end_date)s IS NULL OR projects.created_at <= %(end_date)s)
+                AND (%(workspace_id)s IS NULL OR projects.workspace_id = %(workspace_id)s)
+                AND (%(department_id)s IS NULL OR projects.department_id = %(department_id)s)                
+                AND CASE 
+                        WHEN %(is_active)s IS TRUE THEN projects.status_id = 1
+                        WHEN %(is_completed)s IS TRUE THEN projects.status_id = 2
+                        ELSE (%(status_id)s IS NULL OR status_id = %(status_id)s)
+                    END                
+                AND CASE 
+                        WHEN  %(check_1_my_projects)s IS FALSE THEN (%(owner_id)s IS NULL OR projects.owner_id = %(owner_id)s)
+                        ELSE owner_id = %(current_user)s
+                    END
+            GROUP by
+                projects.id 
 
-                GROUP by
-                    projects.id 
-
-                ) as projects
+            ) as projects
         LEFT JOIN (
             SELECT
                 t_task.id as id,
@@ -426,18 +434,18 @@ def get_project_members(filters, current_user_id, user_right_id, projects):
                 AND t_task.executor_id = t_user_executor.id   
             ) tasks  
         ON projects.id = tasks.project_id 
-        LEFT JOIN (SELECT * FROM task_task_new_messages WHERE user_id = {current_user_id}) task_new_messages
+        LEFT JOIN (SELECT * FROM task_task_new_messages WHERE user_id = %(current_user)s) task_new_messages
         ON tasks.id = task_new_messages.task_id 
 
         ORDER BY 
             projects.id,
             tasks.id                          
 
-        """
+        '''
 
     else:
 
-        request_text = f"""
+        request_text = '''
 
         SELECT        
             projects.id,            
@@ -463,17 +471,25 @@ def get_project_members(filters, current_user_id, user_right_id, projects):
                 task_project projects               
             WHERE
                 project_members.project_id = projects.id                
-                AND project_members.user_id = {current_user_id}
-                {'AND projects.created_at BETWEEN %s AND %s' if type_of_period != 'clean_period' else ''}  
-                {'AND projects.workspace_id = %s' if workspace_id != "" else ''}    
-                {'AND projects.department_id = %s' if department_id != "" else ''} 
-                {selection_status if selection_status != '' else ''}                      
-                {'AND projects.owner_id = %s' if owner_id != "" else ''}
+                AND project_members.user_id = %(current_user)s
+                AND (%(start_date)s IS NULL OR projects.created_at >= %(start_date)s)
+                AND (%(end_date)s IS NULL OR projects.created_at <= %(end_date)s)
+                AND (%(workspace_id)s IS NULL OR projects.workspace_id = %(workspace_id)s)
+                AND (%(department_id)s IS NULL OR projects.department_id = %(department_id)s)                
+                AND CASE 
+                        WHEN %(is_active)s IS TRUE THEN projects.status_id = 1
+                        WHEN %(is_completed)s IS TRUE THEN projects.status_id = 2
+                        ELSE (%(status_id)s IS NULL OR status_id = %(status_id)s)
+                    END                
+                AND CASE 
+                        WHEN  %(check_1_my_projects)s IS FALSE THEN (%(owner_id)s IS NULL OR projects.owner_id = %(owner_id)s)
+                        ELSE owner_id = %(current_user)s
+                    END
 
-                GROUP by
-                    projects.id 
+            GROUP by
+                projects.id 
 
-                ) as projects
+            ) as projects
         LEFT JOIN (
             SELECT
                 t_task.id as id,
@@ -503,7 +519,7 @@ def get_project_members(filters, current_user_id, user_right_id, projects):
                     FROM 
                         task_task tasks                
                     WHERE
-                        tasks.owner_id = {current_user_id} or tasks.executor_id = {current_user_id}                
+                        tasks.owner_id = %(current_user)s or tasks.executor_id = %(current_user)s                
 
                     UNION ALL
 
@@ -519,9 +535,15 @@ def get_project_members(filters, current_user_id, user_right_id, projects):
                         task_task tasks               
                     WHERE
                         task_members.task_id = tasks.id                
-                        AND task_members.user_id = {current_user_id}) all_tasks_user        
+                        AND task_members.user_id = %(current_user)s) all_tasks_user        
                 GROUP by
-                        all_tasks_user.id) t_task,
+                        all_tasks_user.id,
+                        all_tasks_user.title,
+                        all_tasks_user.project_id,
+                        all_tasks_user.owner_id,
+                        all_tasks_user.executor_id,
+                        all_tasks_user.status_id
+                        ) t_task,
                 task_task_status t_status,
                 auth_user t_user_owner,
                 auth_user t_user_executor
@@ -531,18 +553,60 @@ def get_project_members(filters, current_user_id, user_right_id, projects):
                 AND t_task.executor_id = t_user_executor.id   
             ) tasks  
         ON projects.id = tasks.project_id 
-        LEFT JOIN (SELECT * FROM task_task_new_messages WHERE user_id = {current_user_id}) task_new_messages
+        LEFT JOIN (SELECT * FROM task_task_new_messages WHERE user_id = %(current_user)s) task_new_messages
         ON tasks.id = task_new_messages.task_id 
 
         ORDER BY 
             projects.id,
             tasks.id                          
 
-        """
+        '''
 
-    # print(request_text)
-
-    projects_qs = Project.objects.raw(request_text, selection_list)
-    projects = get_final_projects_table(projects_qs, projects)
+    projects_qs = Project.objects.raw(request_text, params=filters_data)
+    projects: list = get_project_seriales_data(projects_qs, projects)
 
     return projects
+
+
+# Все задачи по проекту, которые доступны пользователю (для view_project_tasks)
+def get_user_project_tasks(project_id, current_user_id):
+
+    request_text = '''
+    
+    select 
+        all_tasks_user.id
+    FROM        
+
+    (select 
+        tasks.id as id   
+    FROM 
+        task_task tasks                
+    WHERE
+        tasks.project_id = %(project_id)s 
+        AND (tasks.owner_id = %(current_user_id)s or tasks.executor_id = %(current_user_id)s)                
+
+    UNION ALL
+
+    select 
+        tasks.id
+    FROM
+        task_task tasks, 
+        task_task_members task_members                                   
+    WHERE
+        tasks.project_id = %(project_id)s
+        AND task_members.task_id = tasks.id                                  
+        AND task_members.user_id = %(current_user_id)s) as all_tasks_user  
+
+    GROUP by
+        all_tasks_user.id               
+
+    '''
+
+    filters_data: dict = {
+        'project_id': project_id,
+        'current_user_id': current_user_id        
+    }
+
+    project_tasks_qs = Task.objects.raw(request_text, params=filters_data)
+
+    return project_tasks_qs

@@ -10,27 +10,11 @@ from django.contrib.auth import login, logout
 
 import task.forms as task_forms
 
-from task.logic import task_filters, project_filters, task_disputes, common_filters, form_selections, user_rights
+from task.logic import task_filters, project_filters, task_disputes, form_selections, user_rights
 from task.models import Department, Task, Project, User, Task_Status, Project_Status, Task_Dispute, Task_Members, Project_Members, User_Rights, Workspace
 
 locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
 
-
-# Служебные функции
-
-def selection_line_compound(line):
-    if line != "":
-        line += " AND "
-    else:
-        line += " WHERE "
-    return line
-
-def append_filter_to_request_text(line, text_filter):
-    line = selection_line_compound(line)
-    line += text_filter
-    return line
-
-# Авторизация
 
 def user_login(request):
 
@@ -63,9 +47,11 @@ class GetProjects(ListView):
         if request.user.is_authenticated is False:
             return redirect('login')
 
+        projects: list = []
         user_right = User_Rights.objects.get(user=request.user).role
+        filters_data: dict = project_filters.create_project_filters_dict(request.user.id)
 
-        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+        is_ajax: bool = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
 
         if is_ajax:
 
@@ -76,69 +62,26 @@ class GetProjects(ListView):
                 quick_selection_data = json.loads(quick_selection)
 
                 # Быстрые отборы (приведем значения к булево)
-                quick_selection_data['check_1'] = False if quick_selection_data['check_1'] == "off" else True
-                quick_selection_data['check_2'] = False if quick_selection_data['check_2'] == "off" else True
+                quick_selection_data['check_1_my_projects'] = False if quick_selection_data['check_1_my_projects'] == "off" else True
+                quick_selection_data['check_2_projects_participation'] = False if quick_selection_data['check_2_projects_participation'] == "off" else True
 
-                # Отборы
+                # Селекторы
                 selection = request.headers.get('selection')
                 selection_data = json.loads(selection)
 
-                projects = []
-
-                # Собираем текст запроса к модели Project
-                selection_list = []
-                selection_line = ""
+                filters = {'quick_selection': quick_selection_data, 'selection_data': selection_data, 'current_user': request.user.id}
+                filters_data = project_filters.get_form_project_filters(filters, filters_data)
 
                 # Если включен только второй чек, а первый выключен, то запрос по проектам не формируем
-                if not (quick_selection_data['check_1'] is False and quick_selection_data['check_2'] is True):
-
-                    # Отбор по периоду
-                    type_of_period = quick_selection_data['period']
-                    if type_of_period != 'clean_period':
-                        end_date = datetime.date.today()
-                        start_date = common_filters.get_start_date(type_of_period, end_date)
-                        selection_list.append(start_date)
-                        selection_list.append(end_date + datetime.timedelta(days=1))
-                        selection_line = " WHERE created_at BETWEEN %s AND %s "
-
-                    # filter by owner
-                    if quick_selection_data['check_1'] is True:
-                        selection_line = append_filter_to_request_text(selection_line, 'owner_id = %s')
-                        selection_list.append(request.user.id)
-                    else:
-                        if selection_data["owner"] != "":
-                            selection_line = append_filter_to_request_text(selection_line, 'owner_id = %s')
-                            selection_list.append(selection_data["owner"])
-
-                    if quick_selection_data['is_active'] is True:
-                        selection_line = selection_line_compound(selection_line)
-                        selection_line += 'status_id = 1'
-                    elif quick_selection_data['is_completed'] is True:
-                        selection_line = selection_line_compound(selection_line)
-                        selection_line += 'status_id = 2'
-
-                    for key in selection_data:
-                        # print(f'{key}: {selection_data[key]}')
-                        if key == "owner":
-                            continue
-                        if (quick_selection_data['check_1'] is True or quick_selection_data[
-                            'check_2'] is True) and key == "status":
-                            continue
-                        if selection_data[key] != "":
-                            selection_line = append_filter_to_request_text(selection_line, f'{key}_id = %s')
-                            selection_list.append(selection_data[key])
-
+                if not (quick_selection_data['check_1_my_projects'] is False and quick_selection_data['check_2_projects_participation'] is True):
                     if user_right.is_full:
-                        projects = project_filters.get_user_projects_and_tasks_full_rights([], request.user.id, selection_line, selection_list)
+                        projects = project_filters.get_user_projects_and_tasks_full_rights(projects, filters_data)
                     else:
-                        projects = project_filters.get_user_projects_and_tasks(request.user.id, selection_line, selection_list)
+                        projects = project_filters.get_user_projects_and_tasks(projects, filters_data)
 
-                if quick_selection_data['check_2'] is True:
-                    print(f"user_id: {request.user.id}")
+                if quick_selection_data['check_2_projects_participation'] is True:
                     # Запрос по участникам проекта
-                    filters = {'quick_selection': quick_selection_data, 'selection_data': selection_data,
-                               'current_user': request.user.id}
-                    projects = project_filters.get_project_members(filters, request.user.id, user_right.id, projects)
+                    projects = project_filters.get_project_members(projects, filters_data, user_right)
 
                 projects.sort(key=lambda dictionary: dictionary['created_at'], reverse=True)
 
@@ -148,10 +91,8 @@ class GetProjects(ListView):
 
             selection_form = task_forms.SelectionProjectsForm()
 
-            # Установим фильтры на селекторы
-
+            # Заполним данные селекторов
             workspace_list = form_selections.get_user_workspaces_list(request.user)
-
             workspace_qs = Workspace.objects.filter(pk__in=workspace_list)
             selection_form.fields['workspace'].queryset = workspace_qs
 
@@ -159,14 +100,13 @@ class GetProjects(ListView):
             selection_form.fields['department'].queryset = department_qs
 
             users_qs = form_selections.get_users_by_workspace(workspace_list)
-            selection_form.fields['owner'].queryset = users_qs
+            selection_form.fields['owner'].queryset = users_qs            
 
-            # ----------------------------------------------------------------------------
-
+            # Заполним список проектов
             if user_right.is_full:
-                projects = project_filters.get_user_projects_and_tasks_full_rights([],request.user.id,"",[])
+                projects = project_filters.get_user_projects_and_tasks_full_rights(projects, filters_data)
             else:
-                projects = project_filters.get_user_projects_and_tasks(request.user.id,"",[])
+                projects = project_filters.get_user_projects_and_tasks(projects, filters_data)
 
             projects.sort(key=lambda dictionary: dictionary['created_at'], reverse=True)
 
@@ -197,7 +137,7 @@ def get_project_main(request, pk):
 
         if request.method == 'GET':
 
-            members = []
+            members: list = []
             members_qs = Project_Members.objects.filter(project=pk).order_by('pk')
             for item in members_qs:
                 members.append({'id': item.id, 'user': f"{item.user.last_name} {item.user.first_name}"})
@@ -317,7 +257,7 @@ class GetProjectTasks(DetailView):
         else:
             tasks_qs = project_filters.get_user_project_tasks(current_project.id, self.request.user.id)
 
-        tasks_table = task_filters.get_tasks_seriales_data([], tasks_qs, "task", request.user.id)
+        tasks_table = task_filters.get_tasks_seriales_data(tasks=[], tasks_qs=tasks_qs, type_table="task", current_user_id=request.user.id)
 
         context = {}
         context['project_item'] = current_project
@@ -381,7 +321,7 @@ def get_tasks(request):
     if request.user.is_authenticated is False:
         return redirect('login')
 
-    tasks = []
+    tasks: list = []
     user_right = User_Rights.objects.get(user=request.user).role
 
     is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
@@ -395,24 +335,24 @@ def get_tasks(request):
             quick_selection_data = json.loads(quick_selection)
 
             # Быстрые отборы (приведем значения к булево)
-            quick_selection_data['check_1'] = False if quick_selection_data['check_1'] == "off" else True
-            quick_selection_data['check_2'] = False if quick_selection_data['check_2'] == "off" else True
-            quick_selection_data['check_3'] = False if quick_selection_data['check_3'] == "off" else True
+            quick_selection_data['check_1_my_tasks'] = False if quick_selection_data['check_1_my_tasks'] == "off" else True
+            quick_selection_data['check_2_tasks_to_complete'] = False if quick_selection_data['check_2_tasks_to_complete'] == "off" else True
+            quick_selection_data['check_3_tasks_participation'] = False if quick_selection_data['check_3_tasks_participation'] == "off" else True
 
             # Селекторы
             selection = request.headers.get('selection')
             selection_data = json.loads(selection)
 
             filters = {'quick_selection': quick_selection_data, 'selection_data': selection_data, 'current_user': request.user.id}
-            filters_data = task_filters.get_form_task_filters(filters)            
+            filters_data = task_filters.get_form_task_filters(filters)
 
             # Если включен только третий чек, а остальные выключены, то запрос по задачам не формируем
-            if not ((quick_selection_data['check_1'] is False and quick_selection_data['check_2'] is False) and quick_selection_data['check_3'] is True):
+            if not ((quick_selection_data['check_1_my_tasks'] is False and quick_selection_data['check_2_tasks_to_complete'] is False) and quick_selection_data['check_3_tasks_participation'] is True):
                 tasks_qs = task_filters.get_user_tasks_selection(filters_data, user_right)
                 tasks = task_filters.get_tasks_seriales_data(tasks, tasks_qs, "task", request.user.id)
 
             # Добавляем участников задачи
-            if quick_selection_data['check_3'] is True:
+            if quick_selection_data['check_3_tasks_participation'] is True:
                 tasks_members_qs = task_filters.get_task_members(filters_data)
                 tasks = task_filters.get_tasks_seriales_data(tasks, tasks_members_qs, "task_members", request.user.id)
 
@@ -437,7 +377,7 @@ def get_tasks(request):
         selection_form.fields['executor'].queryset = users_qs
         selection_form.fields['project'].queryset = form_selections.get_user_projects(request.user.id, None)
 
-        # Заполним таблицу задач
+        # Заполним список задач
         if user_right.is_full:
             all_tasks_qs = Task.objects.all().order_by('-created_at')
             tasks_table = task_filters.get_tasks_seriales_data(tasks, all_tasks_qs, "task", request.user.id)

@@ -39,7 +39,7 @@ def clean_task_count_messages(task, user):
         current_counter.save()
 
 
-def get_tasks_seriales_data(tasks, tasks_qs, type_table, current_user_id):
+def get_tasks_seriales_data(tasks, tasks_qs, type_table, current_user_id) -> list:
 
     for item in tasks_qs:
 
@@ -73,7 +73,7 @@ def get_tasks_seriales_data(tasks, tasks_qs, type_table, current_user_id):
     return tasks
 
 
-def get_form_task_filters(filters):
+def get_form_task_filters(filters) -> dict:
 
     current_user = filters['current_user']
     selections = filters['selection_data']
@@ -91,28 +91,28 @@ def get_form_task_filters(filters):
     is_completed = quick_selections['is_completed']
     status_id = selections['status'] if selections['status'] != "" else None
 
-    check_my_task = quick_selections['check_1']
-    check_task_to_complete = quick_selections['check_2']
+    check_1_my_tasks = quick_selections['check_1_my_tasks']
+    check_2_tasks_to_complete = quick_selections['check_2_tasks_to_complete']
 
-    if check_my_task is True:
+    if check_1_my_tasks is True:
         owner_id = current_user
     else:
         owner_id = selections['owner'] if selections['owner'] != "" else None
 
-    if check_task_to_complete is True:
+    if check_2_tasks_to_complete is True:
         executor_id = current_user
     else:
         executor_id = selections['executor'] if selections['executor'] != "" else None
 
-    selections: dict = {
+    filters_data: dict = {
         'current_user': current_user,
         'start_date': start_date,
         'end_date': end_date,
         'workspace_id': workspace_id,
         'department_id': department_id,
         'project_id': project_id,
-        'check_my_task': check_my_task,
-        'check_task_to_complete': check_task_to_complete,        
+        'check_1_my_tasks': check_1_my_tasks,
+        'check_2_tasks_to_complete': check_2_tasks_to_complete,        
         'owner_id': owner_id,
         'executor_id': executor_id,
         'is_active': is_active,
@@ -120,7 +120,7 @@ def get_form_task_filters(filters):
         'status_id': status_id
     }
 
-    return selections
+    return filters_data
 
 
 # Получим задачи пользователя по умолчанию (для GET)
@@ -181,15 +181,15 @@ def get_user_tasks_selection(filters_data, user_right):
             AND (%(department_id)s IS NULL OR department_id = %(department_id)s)
             AND (%(project_id)s IS NULL OR project_id = %(project_id)s)
             AND CASE 
-                    WHEN %(check_my_task)s IS TRUE AND %(check_task_to_complete)s IS TRUE 
+                    WHEN %(check_1_my_tasks)s IS TRUE AND %(check_2_tasks_to_complete)s IS TRUE 
                     THEN (owner_id = %(current_user)s or executor_id = %(current_user)s)
                     ELSE            
                         CASE 
-                            WHEN  %(check_my_task)s IS FALSE THEN (%(owner_id)s IS NULL OR owner_id = %(owner_id)s)
+                            WHEN  %(check_1_my_tasks)s IS FALSE THEN (%(owner_id)s IS NULL OR owner_id = %(owner_id)s)
                             ELSE owner_id = %(current_user)s
                         END            
                         AND CASE 
-                                WHEN  %(check_task_to_complete)s IS FALSE THEN (%(executor_id)s IS NULL OR executor_id = %(executor_id)s)
+                                WHEN  %(check_2_tasks_to_complete)s IS FALSE THEN (%(executor_id)s IS NULL OR executor_id = %(executor_id)s)
                                 ELSE executor_id = %(current_user)s
                             END
                 END           
@@ -237,15 +237,15 @@ def get_user_tasks_selection(filters_data, user_right):
             AND (%(department_id)s IS NULL OR department_id = %(department_id)s)
             AND (%(project_id)s IS NULL OR project_id = %(project_id)s)
             AND CASE 
-                    WHEN %(check_my_task)s IS TRUE AND %(check_task_to_complete)s IS TRUE 
+                    WHEN %(check_1_my_tasks)s IS TRUE AND %(check_2_tasks_to_complete)s IS TRUE 
                     THEN (owner_id = %(current_user)s or executor_id = %(current_user)s)
                     ELSE            
                         CASE 
-                            WHEN  %(check_my_task)s IS FALSE THEN (%(owner_id)s IS NULL OR owner_id = %(owner_id)s)
+                            WHEN  %(check_1_my_tasks)s IS FALSE THEN (%(owner_id)s IS NULL OR owner_id = %(owner_id)s)
                             ELSE owner_id = %(current_user)s
                         END            
                         AND CASE 
-                                WHEN  %(check_task_to_complete)s IS FALSE THEN (%(executor_id)s IS NULL OR executor_id = %(executor_id)s)
+                                WHEN  %(check_2_tasks_to_complete)s IS FALSE THEN (%(executor_id)s IS NULL OR executor_id = %(executor_id)s)
                                 ELSE executor_id = %(current_user)s
                             END
                 END             
@@ -262,8 +262,8 @@ def get_user_tasks_selection(filters_data, user_right):
     return tasks_qs
 
 
-# Функции получения списка задач
-def get_task_members(filters_data):    
+# Получим задачи где пользователь является участником задачи
+def get_task_members(filters_data):
 
     request_text = '''
         SELECT 
@@ -281,11 +281,11 @@ def get_task_members(filters_data):
             AND (%(department_id)s IS NULL OR tasks.department_id = %(department_id)s)
             AND (%(project_id)s IS NULL OR tasks.project_id = %(project_id)s)
             AND CASE 
-                    WHEN  %(check_my_task)s IS FALSE THEN (%(owner_id)s IS NULL OR tasks.owner_id = %(owner_id)s)
+                    WHEN  %(check_1_my_tasks)s IS FALSE THEN (%(owner_id)s IS NULL OR tasks.owner_id = %(owner_id)s)
                     ELSE tasks.owner_id IS NOT NULL
                 END
             AND CASE 
-                    WHEN  %(check_task_to_complete)s IS FALSE THEN (%(executor_id)s IS NULL OR tasks.executor_id = %(executor_id)s)
+                    WHEN  %(check_2_tasks_to_complete)s IS FALSE THEN (%(executor_id)s IS NULL OR tasks.executor_id = %(executor_id)s)
                     ELSE tasks.executor_id IS NOT NULL
                 END            
             AND CASE 

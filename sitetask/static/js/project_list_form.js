@@ -15,8 +15,8 @@ const SelectionOwner = document.querySelector("#id_owner");
 // Быстрые отборы
 
 var quick_selection = {
-    check_1: "off",
-    check_2: "off",
+    check_1_my_projects: "off",
+    check_2_projects_participation: "off",
     is_active: false,
     is_completed: false,
     period: "clean_period",
@@ -71,7 +71,7 @@ function change_color_selection(input_selection) {
 }
 
 function get_check_1(id, value) {
-    quick_selection['check_1'] = value;
+    quick_selection['check_1_my_projects'] = value;
     if (value == "on") {
         SelectionOwner.value = "";
         SelectionOwner.setAttribute('disabled', true);
@@ -83,7 +83,7 @@ function get_check_1(id, value) {
 }
 
 function get_check_2(id, value) {
-    quick_selection['check_2'] = value;
+    quick_selection['check_2_projects_participation'] = value;
     get_list();
 }
 

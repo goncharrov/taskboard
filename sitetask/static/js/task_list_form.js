@@ -17,9 +17,9 @@ const SelectionProject = document.querySelector("#id_project");
 // Быстрые отборы
 
 var quick_selection = {
-    check_1: "off",
-    check_2: "off",
-    check_3: "off",
+    check_1_my_tasks: "off",
+    check_2_tasks_to_complete: "off",
+    check_3_tasks_participation : "off",
     is_active: false,
     is_completed: false,
     period: "clean_period",
@@ -76,7 +76,7 @@ function change_color_selection(input_selection) {
 }
 
 function get_check_1(id, value) {
-    quick_selection['check_1'] = value;
+    quick_selection['check_1_my_tasks'] = value;
     if (value == "on") {
         SelectionOwner.value = "";
         SelectionOwner.setAttribute('disabled', true);
@@ -88,7 +88,7 @@ function get_check_1(id, value) {
 }
 
 function get_check_2(id, value) {
-     quick_selection['check_2'] = value;
+     quick_selection['check_2_tasks_to_complete'] = value;
      if (value == "on") {
         SelectionExecutor.value = "";
         SelectionExecutor.disabled = true;
@@ -100,7 +100,7 @@ function get_check_2(id, value) {
 }
 
 function get_check_3(id, value) {
-    quick_selection['check_3'] = value;
+    quick_selection['check_3_tasks_participation'] = value;
     get_list();
 }
 
