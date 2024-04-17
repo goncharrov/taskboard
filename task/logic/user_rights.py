@@ -2,7 +2,7 @@ import random
 from task.models import Task_Members, User_Rights, Project_Members, Unauthorized_Access_Attempts
 
 
-def check_permissions_on_task(current_task, current_user):
+def check_permissions_on_task(current_task, current_user) -> dict:
 
     x = random.randint(1, 5)
     if x == 1:
@@ -11,7 +11,7 @@ def check_permissions_on_task(current_task, current_user):
         image_name = f'img/jack{x}.jpeg'
 
     user_right = User_Rights.objects.get(user=current_user).role
-    if user_right.id == 1:
+    if user_right.is_full:
         return {'image_name': image_name, 'access': True}
 
     have_access_to_task = False
@@ -27,7 +27,7 @@ def check_permissions_on_task(current_task, current_user):
 
     return {'image_name': image_name, 'access': have_access_to_task}
 
-def check_permissions_on_project(current_project, current_user):
+def check_permissions_on_project(current_project, current_user) -> dict:
 
     x = random.randint(1, 5)
     if x == 1:
@@ -36,7 +36,7 @@ def check_permissions_on_project(current_project, current_user):
         image_name = f'img/jack{x}.jpeg'
 
     user_right = User_Rights.objects.get(user=current_user).role
-    if user_right.id == 1:
+    if user_right.is_full:
         return {'image_name': image_name, 'access': True}
 
     have_access_to_project = False
@@ -52,7 +52,7 @@ def check_permissions_on_project(current_project, current_user):
 
     return {'image_name': image_name, 'access': have_access_to_project}
 
-def get_input_right(type_form, item, user_id):
+def get_input_right(type_form, item, user_id) -> dict:
 
     if type_form == 'task':
         if item.project:

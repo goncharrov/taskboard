@@ -1,7 +1,7 @@
 import datetime
 import locale
 from task.models import Project, Task
-from task.logic import common_filters
+from task.logic import common_logic
 
 # locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
 locale.setlocale(locale.LC_ALL, ('ru_RU', 'UTF-8'))
@@ -33,7 +33,7 @@ def get_form_project_filters(filters, filters_data) -> dict:
 
     type_of_period = quick_selections['period']
     end_date = datetime.date.today() if type_of_period != 'clean_period' else None
-    start_date = common_filters.get_start_date(type_of_period, end_date) if type_of_period != 'clean_period' else None
+    start_date = common_logic.get_start_date(type_of_period, end_date) if type_of_period != 'clean_period' else None
 
     workspace_id = selections['workspace'] if selections['workspace'] != "" else None
     department_id = selections['department'] if selections['department'] != "" else None

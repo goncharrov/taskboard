@@ -3,5 +3,5 @@ media/
 /static/
 venv/
 node_modules/
-
+zzz/
 *.pyc

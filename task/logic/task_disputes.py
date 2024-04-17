@@ -7,7 +7,7 @@ months = ['января', 'февраля', 'марта', 'апреля', 'ма�
 
 
 def get_user_name(this_user) -> str:
-    return '{} {}'.format(this_user.last_name, this_user.first_name)
+    return f'{this_user.last_name} {this_user.first_name}'
 
 
 def format_data(this_data) -> str:
@@ -17,15 +17,14 @@ def format_data(this_data) -> str:
     return this_data_str
 
 # Получим обсуждение задачи
-def get_task_dispute(pk):
+def get_task_dispute(pk) -> dict:
 
     image_extension = ['.jpg', '.JPG', '.jpeg', '.gif', '.bmp', '.png', '.heic']
 
-    counter = 0
     dispute = []
     dispute_qs = Task_Dispute.objects.filter(task__pk=pk).order_by('created_at')
+
     for message_qs in dispute_qs:
-        counter += 1
 
         is_image = False
         file_name = ''
@@ -38,36 +37,33 @@ def get_task_dispute(pk):
         if message_qs.in_reply_task_dispute == 0:
             dispute.append(
                 {'id': message_qs.id,
+                'user': get_user_name(message_qs.user),
+                'user_id': message_qs.user.id,
+                'content': message_qs.content,
+                'created_at': format_data(message_qs.created_at),
+                'in_reply': [],
+                'file': message_qs.file.url if message_qs.file else '',
+                'IsImage': is_image,
+                'FileName': file_name})
+        else:
+            found_message = list(filter(lambda message: message['id'] == message_qs.in_reply_task_dispute, dispute))
+            if len(found_message) > 0:
+                in_reply = found_message[0]['in_reply']
+                in_reply.append(
+                    {'id': message_qs.id,
                     'user': get_user_name(message_qs.user),
                     'user_id': message_qs.user.id,
+                    'in_reply_user': get_user_name(message_qs.in_reply_user),
                     'content': message_qs.content,
                     'created_at': format_data(message_qs.created_at),
-                    'in_reply': [],
                     'file': message_qs.file.url if message_qs.file else '',
                     'IsImage': is_image,
                     'FileName': file_name})
-        else:
-            # не нашел, как обратиться к конкретной строке, по-этому сделал цикл
-            # нужно использовать element in list
-            # Источник: https://egorovegor.ru/poisk-elementa-v-spiske-python
-            for message in dispute:
-                if message['id'] == message_qs.in_reply_task_dispute:
-                    in_reply = message['in_reply']
-                    in_reply.append(
-                        {'id': message_qs.id,
-                            'user': get_user_name(message_qs.user),
-                            'user_id': message_qs.user.id,
-                            'in_reply_user': get_user_name(message_qs.in_reply_user),
-                            'content': message_qs.content,
-                            'created_at': format_data(message_qs.created_at),
-                            'file': message_qs.file.url if message_qs.file else '',
-                            'IsImage': is_image,
-                            'FileName': file_name})
 
-    return {'dispute': dispute, 'message_quantity': counter}
+    return {'dispute': dispute, 'message_quantity': dispute_qs.count()}
 
 
-def get_current_message_dict(message):
+def get_current_message(message) -> dict:
 
     image_extension = ['.jpg', '.jpeg', '.gif', '.bmp', '.png', '.heic']
 

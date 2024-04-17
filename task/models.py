@@ -20,8 +20,7 @@ User.add_to_class("__str__", get_name)
 
 # Profile Details - Company, Job title, Department
 # user_settings ???
-# Сделать запись отчетов по выполнению как в Jobs
-# Комментарии к задачам добавить
+
 
 class User_Roles(models.Model):
     title = models.CharField(max_length=50, verbose_name='Наименование')
@@ -138,7 +137,8 @@ class Project_Members(models.Model):
                              related_name='related_project_members')
 
     def __str__(self):
-        return f'{self.project.title} : {self.user.username}'
+        # return f'{self.project.title} : {self.user.username}'
+        return self.project.title
 
     class Meta:
         verbose_name = 'Участник проекта'

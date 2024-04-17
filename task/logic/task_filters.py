@@ -1,7 +1,7 @@
 import datetime
 from django.db.models import F
 from task.models import Task, Task_Members, Task_New_Messages
-from task.logic import common_filters
+from task.logic import common_logic
 
 
  # Обновим счетчики непрочитанных сообщений
@@ -51,7 +51,7 @@ def get_tasks_seriales_data(tasks, tasks_qs, type_table, current_user_id) -> lis
         task_to_add = {
             'id': task.id,
             'title': task.title,
-            'url': Task.get_absolute_url_main(task),
+            'url': task.get_absolute_url_main(),
             'status': task.status.title,
             'owner': f"{task.owner.last_name} {task.owner.first_name}",
             'executor': f"{task.executor.last_name} {task.executor.first_name}",
@@ -81,7 +81,7 @@ def get_form_task_filters(filters) -> dict:
 
     type_of_period = quick_selections['period']
     end_date = datetime.date.today() if type_of_period != 'clean_period' else None
-    start_date = common_filters.get_start_date(type_of_period, end_date) if type_of_period != 'clean_period' else None
+    start_date = common_logic.get_start_date(type_of_period, end_date) if type_of_period != 'clean_period' else None
 
     workspace_id = selections['workspace'] if selections['workspace'] != "" else None
     department_id = selections['department'] if selections['department'] != "" else None

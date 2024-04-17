@@ -638,7 +638,7 @@ def get_task_main(request, pk):
 
         return render(request, 'task/task_main.html', {'form': form_task,'task_item': task_item, 'form_members': form_members, 'members': members, 'new_messages': new_messages, 'user_id': current_user.id, 'input_right': input_right})
 
-def get_task_chat_def(request, pk):
+def get_task_chat(request, pk):
 
     if request.user.is_authenticated is False:
         return redirect('login')
@@ -689,7 +689,7 @@ def get_task_chat_def(request, pk):
 
             new_message = Task_Dispute.objects.create(task=current_task, user=current_user, content=content, in_reply_task_dispute=main_message_id, in_reply_user=reply_user, file=file)
 
-            new_message_dict = task_disputes.get_current_message_dict(new_message)
+            new_message_dict = task_disputes.get_current_message(new_message)
 
             task_filters.add_task_count_messages(current_task, current_user)
 
