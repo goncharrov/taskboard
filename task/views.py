@@ -48,7 +48,7 @@ class GetProjects(ListView):
             return redirect('login')
 
         projects: list = []
-        user_right = User_Rights.objects.get(user=request.user).role
+        user_right = user_rights.get_user_role(request.user)
         filters_data: dict = project_filters.create_project_filters_dict(request.user.id)
 
         is_ajax: bool = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
@@ -56,6 +56,10 @@ class GetProjects(ListView):
         if is_ajax:
 
             if request.method == 'GET':
+
+                workspace_list = form_selections.get_user_workspaces_list(request.user)
+                if len(workspace_list) == 0:
+                    return JsonResponse({'context': []})
 
                 # Быстрые отборы
                 quick_selection = request.headers.get('quick-selection')
@@ -91,8 +95,12 @@ class GetProjects(ListView):
 
             selection_form = task_forms.SelectionProjectsForm()
 
-            # Заполним данные селекторов
             workspace_list = form_selections.get_user_workspaces_list(request.user)
+            if len(workspace_list) == 0:
+                context = {'selection': selection_form, 'projects': []}
+                return render(request, self.template_name, context)
+
+            # Заполним данные селекторов
             workspace_qs = Workspace.objects.filter(pk__in=workspace_list)
             selection_form.fields['workspace'].queryset = workspace_qs
 
@@ -103,6 +111,7 @@ class GetProjects(ListView):
             selection_form.fields['owner'].queryset = users_qs            
 
             # Заполним список проектов
+            print(user_right.is_full)
             if user_right.is_full:
                 projects = project_filters.get_user_projects_and_tasks_full_rights(projects, filters_data)
             else:
@@ -251,7 +260,7 @@ class GetProjectTasks(DetailView):
         if have_access_to_project['access'] is not True:
             return render(request, 'task/blank_main.html', have_access_to_project)
 
-        user_right = User_Rights.objects.get(user=request.user).role
+        user_right = user_rights.get_user_role(request.user)
         if user_right.is_full:
             tasks_qs = Task.objects.filter(project=current_project)
         else:
@@ -288,6 +297,12 @@ class AddNewProject(CreateView):
         if request.user.is_authenticated is False:
             return redirect('login')
 
+        workspace_list = form_selections.get_user_workspaces_list(request.user)
+        if len(workspace_list) == 0:
+            selection_form = task_forms.SelectionProjectsForm()
+            context = {'selection': selection_form, 'projects': []}
+            return render(request, 'task/project_list.html', context)
+
         is_ajax = request.headers.get('Y-Requested-With') == 'XMLHttpRequest'
 
         if is_ajax:
@@ -322,13 +337,17 @@ def get_tasks(request):
         return redirect('login')
 
     tasks: list = []
-    user_right = User_Rights.objects.get(user=request.user).role
+    user_right = user_rights.get_user_role(request.user)   
 
     is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
 
     if is_ajax:
 
         if request.method == 'GET':
+
+            workspace_list = form_selections.get_user_workspaces_list(request.user)
+            if len(workspace_list) == 0:
+                return JsonResponse({'context': []})
 
             # Быстрые отборы
             quick_selection = request.headers.get('quick-selection')
@@ -364,8 +383,12 @@ def get_tasks(request):
 
         selection_form = task_forms.SelectionTasksForm()
 
-        # Заполним данные селекторов
         workspace_list = form_selections.get_user_workspaces_list(request.user)
+        if len(workspace_list) == 0:
+            context = {'selection': selection_form, 'tasks': []}
+            return render(request, 'task/task_list.html', context)
+
+        # Заполним данные селекторов
         workspace_qs = Workspace.objects.filter(pk__in=workspace_list)
         selection_form.fields['workspace'].queryset = workspace_qs
 
@@ -394,6 +417,12 @@ def add_new_task(request):
 
     if request.user.is_authenticated is False:
         return redirect('login')
+
+    workspace_list = form_selections.get_user_workspaces_list(request.user)
+    if len(workspace_list) == 0:
+        selection_form = task_forms.SelectionTasksForm()
+        context = {'selection': selection_form, 'tasks': []}
+        return render(request, 'task/task_list.html', context)
 
     is_ajax = request.headers.get('Y-Requested-With') == 'XMLHttpRequest'
 

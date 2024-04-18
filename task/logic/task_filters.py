@@ -194,7 +194,7 @@ def get_user_tasks_selection(filters_data, user_right):
                             END
                 END           
             AND CASE 
-                    WHEN %(is_active)s IS TRUE THEN status_id in (1,2,4)
+                    WHEN %(is_active)s IS TRUE THEN status_id in (1,2)
                     WHEN %(is_completed)s IS TRUE THEN status_id in (3,5)
                     ELSE (%(status_id)s IS NULL OR status_id = %(status_id)s)
                 END            
@@ -250,7 +250,7 @@ def get_user_tasks_selection(filters_data, user_right):
                             END
                 END             
             AND CASE 
-                    WHEN %(is_active)s IS TRUE THEN status_id in (1,2,4)
+                    WHEN %(is_active)s IS TRUE THEN status_id in (1,2)
                     WHEN %(is_completed)s IS TRUE THEN status_id in (3,5)
                     ELSE (%(status_id)s IS NULL OR status_id = %(status_id)s)
                 END        
@@ -289,7 +289,7 @@ def get_task_members(filters_data):
                     ELSE tasks.executor_id IS NOT NULL
                 END            
             AND CASE 
-                    WHEN %(is_active)s IS TRUE THEN tasks.status_id in (1,2,4)
+                    WHEN %(is_active)s IS TRUE THEN tasks.status_id in (1,2)
                     WHEN %(is_completed)s IS TRUE THEN tasks.status_id in (3,5)
                     ELSE (%(status_id)s IS NULL OR tasks.status_id = %(status_id)s)
                 END

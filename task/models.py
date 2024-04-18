@@ -10,7 +10,7 @@ locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
 # from django.contrib.auth import get_user_model
 # User = get_user_model()
 
-USER_RIGHTS_FULL_ID = 1
+NAME_OF_USER_RIGHTS_FULL = 'Полные права'
 
 
 def get_name(self):
@@ -27,7 +27,7 @@ class User_Roles(models.Model):
 
     @property
     def is_full(self):
-        return self.id == USER_RIGHTS_FULL_ID
+        return self.title == NAME_OF_USER_RIGHTS_FULL
 
     def __str__(self):
         return self.title

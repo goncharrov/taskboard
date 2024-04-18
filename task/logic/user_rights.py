@@ -1,5 +1,24 @@
 import random
-from task.models import Task_Members, User_Rights, Project_Members, Unauthorized_Access_Attempts
+from task.models import Task_Members, User_Rights, User_Roles, Project_Members, Unauthorized_Access_Attempts
+
+
+def get_user_role(current_user):
+
+    user_right = User_Rights.objects.filter(user=current_user).first()
+    print(user_right)
+    if user_right is None:
+        user_roles = User_Roles.objects.all()
+        if user_roles.count() == 0:
+            User_Roles.objects.create(title='Полные права')
+            User_Roles.objects.create(title='Пользователь')
+
+        user_role = User_Roles.objects.filter(title='Пользователь').first()
+        if user_role is None:
+            user_role = User_Roles.objects.create(title='Пользователь')
+
+        user_right = User_Rights.objects.create(user=current_user, role=user_role)
+
+    return user_right.role
 
 
 def check_permissions_on_task(current_task, current_user) -> dict:
