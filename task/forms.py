@@ -3,7 +3,7 @@ from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import AuthenticationForm
 from ckeditor_uploader.widgets import CKEditorUploadingWidget
-from .models import Task, Workspace, Department, Project, User, Task_Status, Project_Status
+from .models import Task, Workspace, Department, Project, User, TaskStatus, ProjectStatus
 
 User = get_user_model()
 
@@ -47,7 +47,7 @@ class TaskForm(forms.ModelForm):
         self.fields['status'].empty_label = ""
         self.fields['project'].empty_label = ""
         user_qs = User.objects.all()
-        self.fields['executor'].queryset = user_qs       
+        self.fields['executor'].queryset = user_qs
 
     class Meta:
         model = Task
@@ -91,8 +91,8 @@ class ProjectForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(ProjectForm, self).__init__(*args, **kwargs)
         self.fields['department'].empty_label = ""
-        self.fields['status'].empty_label = ""       
-    
+        self.fields['status'].empty_label = ""
+
     class Meta:
         model = Project
         fields = ['department','status', 'finish_date']
@@ -136,7 +136,7 @@ class MembersTaskForm(forms.Form):
 class SelectionTasksForm(forms.Form):
     workspace = forms.ModelChoiceField(queryset=Workspace.objects.none(), required=False, empty_label='Рабочее пространство', widget=forms.Select(attrs={"class": "form-select form-select-sm taskboard_sidebar_select"}))
     department = forms.ModelChoiceField(queryset=Department.objects.none(), required=False,  empty_label='Подразделение', widget=forms.Select(attrs={"class": "form-select form-select-sm taskboard_sidebar_select"}))
-    status = forms.ModelChoiceField(queryset=Task_Status.objects.all(), required=False, empty_label='Состояние', widget=forms.Select(attrs={"class": "form-select form-select-sm taskboard_sidebar_select"}))
+    status = forms.ModelChoiceField(queryset=TaskStatus.objects.all(), required=False, empty_label='Состояние', widget=forms.Select(attrs={"class": "form-select form-select-sm taskboard_sidebar_select"}))
     owner = forms.ModelChoiceField(queryset=User.objects.none(), required=False, empty_label='Автор', widget=forms.Select(attrs={"class": "form-select form-select-sm taskboard_sidebar_select"}))
     executor = forms.ModelChoiceField(queryset=User.objects.none(), required=False, empty_label='Исполнитель', widget=forms.Select(attrs={"class": "form-select form-select-sm taskboard_sidebar_select"}))
     project = forms.ModelChoiceField(queryset=Project.objects.none(), required=False, empty_label='Проект', widget=forms.Select(attrs={"class": "form-select form-select-sm taskboard_sidebar_select"}))
@@ -148,7 +148,7 @@ class SelectionProjectsForm(forms.Form):
     department = forms.ModelChoiceField(queryset=Department.objects.none(), required=False, empty_label='Подразделение',
                                         widget=forms.Select(
                                             attrs={"class": "form-select form-select-sm taskboard_sidebar_select"}))
-    status = forms.ModelChoiceField(queryset=Project_Status.objects.all(), required=False, empty_label='Состояние',
+    status = forms.ModelChoiceField(queryset=ProjectStatus.objects.all(), required=False, empty_label='Состояние',
                                     widget=forms.Select(
                                         attrs={"class": "form-select form-select-sm taskboard_sidebar_select"}))
     owner = forms.ModelChoiceField(queryset=User.objects.none(), required=False,

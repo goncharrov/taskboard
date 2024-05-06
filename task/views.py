@@ -11,7 +11,7 @@ from django.contrib.auth import login, logout
 import task.forms as task_forms
 
 from task.logic import task_filters, project_filters, task_disputes, form_selections, user_rights
-from task.models import Department, Task, Project, User, Task_Status, Project_Status, Task_Dispute, Task_Members, Project_Members, User_Rights, Workspace
+from task.models import Department, Task, Project, User, TaskStatus, ProjectStatus, TaskDispute, TaskMembers, ProjectMembers, Workspace
 
 locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
 
@@ -108,10 +108,10 @@ class GetProjects(ListView):
             selection_form.fields['department'].queryset = department_qs
 
             users_qs = form_selections.get_users_by_workspace(workspace_list)
-            selection_form.fields['owner'].queryset = users_qs            
+            selection_form.fields['owner'].queryset = users_qs
 
             # Заполним список проектов
-            print(user_right.is_full)
+            # print(user_right.is_full)
             if user_right.is_full:
                 projects = project_filters.get_user_projects_and_tasks_full_rights(projects, filters_data)
             else:
@@ -147,7 +147,7 @@ def get_project_main(request, pk):
         if request.method == 'GET':
 
             members: list = []
-            members_qs = Project_Members.objects.filter(project=pk).order_by('pk')
+            members_qs = ProjectMembers.objects.filter(project=pk).order_by('pk')
             for item in members_qs:
                 members.append({'id': item.id, 'user': f"{item.user.last_name} {item.user.first_name}"})
 
@@ -164,9 +164,9 @@ def get_project_main(request, pk):
             if member == project_item.owner:
                 return JsonResponse({'status': 'User is already owner!'}, safe=False)
             else:
-                members = Project_Members.objects.filter(project=project, user=member)
+                members = ProjectMembers.objects.filter(project=project, user=member)
                 if members.count() == 0:
-                    Project_Members.objects.create(project=project, user=member)
+                    ProjectMembers.objects.create(project=project, user=member)
                     return JsonResponse({'status': 'User added!'}, safe=False)
                 else:
                     return JsonResponse({'status': 'The user is already a member!'}, safe=False)
@@ -174,7 +174,7 @@ def get_project_main(request, pk):
         if request.method == 'DELETE':
             data = json.load(request)
             project_member_id = data.get('member_id')
-            member = Project_Members.objects.get(pk=project_member_id)
+            member = ProjectMembers.objects.get(pk=project_member_id)
             member.delete()
 
             return JsonResponse({'status': 'User removed!'}, safe=False)
@@ -185,7 +185,7 @@ def get_project_main(request, pk):
 
         if request.method == 'POST':
 
-            status_closed = Project_Status.objects.get(pk=2)
+            status_closed = ProjectStatus.objects.get(pk=2)
 
             if project_item.status == status_closed:
                 return redirect(project_item.get_absolute_url_main())
@@ -240,7 +240,7 @@ def get_project_main(request, pk):
             users_qs = form_selections.get_users_by_workspace([project_item.workspace.id, ])
             form_members.fields['user'].queryset = users_qs
 
-        members = Project_Members.objects.filter(project__pk=pk)
+        members = ProjectMembers.objects.filter(project__pk=pk)
 
         return render(request, 'task/project_main.html', {'form': form_project, 'project_item': project_item, 'form_members': form_members, 'members': members, 'input_right': input_right})
 
@@ -283,7 +283,7 @@ class AddNewProject(CreateView):
     def form_valid(self, form):
         self.object = form.save(False)
         self.object.owner = self.request.user
-        self.object.status = Project_Status.objects.get(pk=1)
+        self.object.status = ProjectStatus.objects.get(pk=1)
         self.object.title = self.object.title.capitalize()
         self.object.save()
 
@@ -316,7 +316,7 @@ class AddNewProject(CreateView):
                 department_qs = Department.objects.filter(workspace__pk=selection_data['workspace'])
                 for item_department in department_qs:
                     departments.append({'id': item_department.id,
-                                        'title': f"{item_department.workspace.title} {item_department.title}"})
+                                        'title': f"{item_department.workspace.title} : {item_department.title}"})
 
             return JsonResponse({'departments': departments})
 
@@ -337,7 +337,7 @@ def get_tasks(request):
         return redirect('login')
 
     tasks: list = []
-    user_right = user_rights.get_user_role(request.user)   
+    user_right = user_rights.get_user_role(request.user)
 
     is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
 
@@ -439,7 +439,7 @@ def add_new_task(request):
                 department_qs = Department.objects.filter(workspace__pk=selection_data['workspace'])
                 for item_department in department_qs:
                     departments.append({'id': item_department.id,
-                                        'title': f"{item_department.workspace.title} {item_department.title}"})
+                                        'title': f"{item_department.workspace.title} : {item_department.title}"})
 
             users = []
             users_qs = form_selections.get_users_by_workspace(list(selection_data['workspace']))
@@ -463,7 +463,7 @@ def add_new_task(request):
             form = task_forms.TaskNewForm(request.POST)
 
             owner = request.user
-            status = Task_Status.objects.get(pk=1)
+            status = TaskStatus.objects.get(pk=1)
 
             if form.is_valid():
 
@@ -533,7 +533,7 @@ def get_task_main(request, pk):
             if request.method == 'GET':
 
                 members = []
-                members_qs = Task_Members.objects.filter(task__pk=pk).order_by('pk')
+                members_qs = TaskMembers.objects.filter(task__pk=pk).order_by('pk')
                 for item in members_qs:
                     members.append({'id': item.id, 'user': f"{item.user.last_name} {item.user.first_name}"})
 
@@ -553,19 +553,19 @@ def get_task_main(request, pk):
                     elif member == task_item.executor:
                         return JsonResponse({'status': 'User is already executor!'}, safe=False)
                     else:
-                        members = Task_Members.objects.filter(task=task_item, user=member)
+                        members = TaskMembers.objects.filter(task=task_item, user=member)
                         if members.count() == 0:
-                            Task_Members.objects.create(task=task_item, user=member)
+                            TaskMembers.objects.create(task=task_item, user=member)
                             return JsonResponse({'status': 'User added!'}, safe=False)
                         else:
                             return JsonResponse({'status': 'User is already member!'}, safe=False)
                 else:
                     if task_item.project:
-                        members_qs = Project_Members.objects.filter(project=task_item.project)
+                        members_qs = ProjectMembers.objects.filter(project=task_item.project)
                         for item_member in members_qs:
-                            members = Task_Members.objects.filter(task=task_item, user=item_member.user)
+                            members = TaskMembers.objects.filter(task=task_item, user=item_member.user)
                             if members.count() == 0:
-                                Task_Members.objects.create(task=task_item, user=item_member.user)
+                                TaskMembers.objects.create(task=task_item, user=item_member.user)
                         return JsonResponse({'status': 'Users added!'}, safe=False)
                     else:
                         return JsonResponse({'status': 'No project in task!'}, safe=False)
@@ -575,7 +575,7 @@ def get_task_main(request, pk):
             if request.method == 'DELETE':
                 data = json.load(request)
                 task_member_id = data.get('member_id')
-                member = Task_Members.objects.get(pk=task_member_id)
+                member = TaskMembers.objects.get(pk=task_member_id)
                 member.delete()
 
                 return JsonResponse({'status': 'User removed!'}, safe=False)
@@ -603,8 +603,8 @@ def get_task_main(request, pk):
 
         if request.method == 'POST':
 
-            status_closed = Task_Status.objects.get(pk=3)
-            status_cancel = Task_Status.objects.get(pk=5)
+            status_closed = TaskStatus.objects.get(pk=3)
+            status_cancel = TaskStatus.objects.get(pk=5)
 
             if task_item.status.id == status_closed:
                 return redirect(task_item.get_absolute_url_main())
@@ -663,7 +663,7 @@ def get_task_main(request, pk):
             users_qs = available_users
             form_members.fields['user'].queryset = users_qs
 
-        members = Task_Members.objects.filter(task__pk=pk)
+        members = TaskMembers.objects.filter(task__pk=pk)
 
         return render(request, 'task/task_main.html', {'form': form_task,'task_item': task_item, 'form_members': form_members, 'members': members, 'new_messages': new_messages, 'user_id': current_user.id, 'input_right': input_right})
 
@@ -709,14 +709,14 @@ def get_task_chat(request, pk):
                 message_id = data.get('id')
 
             if int(message_id) > 0:
-                reply_message = Task_Dispute.objects.get(pk=message_id)
+                reply_message = TaskDispute.objects.get(pk=message_id)
                 reply_user = reply_message.user
                 if reply_message.in_reply_task_dispute > 0:
                     main_message_id = reply_message.in_reply_task_dispute
                 else:
                     main_message_id = message_id
 
-            new_message = Task_Dispute.objects.create(task=current_task, user=current_user, content=content, in_reply_task_dispute=main_message_id, in_reply_user=reply_user, file=file)
+            new_message = TaskDispute.objects.create(task=current_task, user=current_user, content=content, in_reply_task_dispute=main_message_id, in_reply_user=reply_user, file=file)
 
             new_message_dict = task_disputes.get_current_message(new_message)
 

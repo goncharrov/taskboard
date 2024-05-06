@@ -1,6 +1,6 @@
 import datetime
 from django.db.models import F
-from task.models import Task, Task_Members, Task_New_Messages
+from task.models import Task, TaskMembers, TaskNewMessages
 from task.logic import common_logic
 
 
@@ -8,7 +8,7 @@ from task.logic import common_logic
 def add_task_count_messages(task, user):
 
     users_to_notify = []
-    members = Task_Members.objects.filter(task=task)
+    members = TaskMembers.objects.filter(task=task)
     for current_member in members:
         if current_member.user != user:
             if current_member.user not in users_to_notify:
@@ -24,16 +24,16 @@ def add_task_count_messages(task, user):
 
     if len(users_to_notify) > 0:
         for current_user in users_to_notify:
-            current_counter = Task_New_Messages.objects.filter(task=task, user=current_user).first()
+            current_counter = TaskNewMessages.objects.filter(task=task, user=current_user).first()
             if current_counter is None:
-                Task_New_Messages.objects.create(task=task, user=current_user, new_messages=1)
+                TaskNewMessages.objects.create(task=task, user=current_user, new_messages=1)
             else:
                 current_counter.new_messages = F('new_messages') + 1
                 current_counter.save()
 
 
 def clean_task_count_messages(task, user):
-    current_counter = Task_New_Messages.objects.filter(task=task, user=user).first()
+    current_counter = TaskNewMessages.objects.filter(task=task, user=user).first()
     if current_counter is not None:
         current_counter.new_messages = 0
         current_counter.save()
@@ -62,7 +62,7 @@ def get_tasks_seriales_data(tasks, tasks_qs, type_table, current_user_id) -> lis
             'new_messages': 0
         }
 
-        new_message = Task_New_Messages.objects.filter(task__id=task.id, user__id=current_user_id).first()
+        new_message = TaskNewMessages.objects.filter(task__id=task.id, user__id=current_user_id).first()
         if new_message:
             task_to_add['new_messages'] = new_message.new_messages
 
@@ -298,6 +298,6 @@ def get_task_members(filters_data):
             taskmembers.task_id
     '''
 
-    tasks_members_qs = Task_Members.objects.raw(request_text, params=filters_data)
+    tasks_members_qs = TaskMembers.objects.raw(request_text, params=filters_data)
 
     return tasks_members_qs

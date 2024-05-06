@@ -204,7 +204,7 @@ def get_user_projects_and_tasks_full_rights(projects, filters_data) -> list:
 
     '''
 
-    print(filters_data)
+    # print(filters_data)
     projects_qs = Project.objects.raw(request_text, params=filters_data)
     projects = get_project_seriales_data(projects_qs, projects)
 

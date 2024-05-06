@@ -1,5 +1,5 @@
 import os
-from task.models import Task_Dispute
+from task.models import TaskDispute
 
 
 months = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября',
@@ -22,7 +22,7 @@ def get_task_dispute(pk) -> dict:
     image_extension = ['.jpg', '.JPG', '.jpeg', '.gif', '.bmp', '.png', '.heic']
 
     dispute = []
-    dispute_qs = Task_Dispute.objects.filter(task__pk=pk).order_by('created_at')
+    dispute_qs = TaskDispute.objects.filter(task__pk=pk).order_by('created_at')
 
     for message_qs in dispute_qs:
 

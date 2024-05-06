@@ -421,8 +421,8 @@ closeFileForm.addEventListener('click', () => {
 
 sendFileForm.addEventListener('click', () => {
 
-    if (uploadFile.files[0].size > 2097152) {
-        alert('Разрешается загружать файлы размером не более 2 мб!');
+    if (uploadFile.files[0].size > 3145728) {
+        alert('Разрешается загружать файлы размером не более 3 мб!');
         closeForm();
     } else {
         if (uploadFile.files[0].type == 'image/bmp') {
