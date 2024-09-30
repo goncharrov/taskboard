@@ -193,18 +193,25 @@ function add_reply_message_html(reply_message, user_id) {
 
     var style_card_color = reply_message.user_id == user_id ? 'style="background-color: rgba(var(--bd-violet-rgb), 0.2);"' : ''
 
+    var in_reply_user = ``;
+
+    if (reply_message.user != reply_message.in_reply_user) {
+      in_reply_user = `
+        <i
+          class="bi bi-arrow-right"
+          style="font-size: 1rem"
+        ></i>
+        <div style="font-weight: bold">&nbsp ${ reply_message.in_reply_user } &nbsp</div>`
+    }
+
     var message_html = `
 
     <div class="d-flex align-items-srart mt-2 mb-3 ms-5">
         <div class="pe-2">
           <div class="card taskboard_message d-inline-block p-2 px-3 m-1" ` + style_card_color + `>
             <div class="d-flex">
-              <div style="font-weight: bold"> ${ reply_message.user } &nbsp</div>
-              <i
-                class="bi bi-arrow-right"
-                style="font-size: 1rem"
-              ></i>
-              <div style="font-weight: bold">&nbsp ${ reply_message.in_reply_user } &nbsp</div>
+              <div style="font-weight: bold"> ${ reply_message.user } &nbsp</div>`
+              + in_reply_user + `              
               <div class="d-none d-md-block" style="color: grey">${ reply_message.created_at }</div>
             </div>`
             + div_file + `

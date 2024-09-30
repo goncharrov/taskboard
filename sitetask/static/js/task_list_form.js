@@ -20,7 +20,7 @@ var quick_selection = {
     check_1_my_tasks: "off",
     check_2_tasks_to_complete: "off",
     check_3_tasks_participation : "off",
-    is_active: false,
+    is_active: true,
     is_completed: false,
     period: "clean_period",
 };
@@ -277,4 +277,8 @@ function add_task_row(item) {
     TasksList.append(NewRow);    
 
 }
+
+(function() {
+    manage_selection_status();
+})()
 

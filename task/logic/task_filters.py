@@ -37,7 +37,7 @@ def clean_task_count_messages(task, user):
     if current_counter is not None:
         current_counter.new_messages = 0
         current_counter.save()
-
+    
 
 def get_tasks_seriales_data(tasks, tasks_qs, type_table, current_user_id) -> list:
 
@@ -137,7 +137,8 @@ def get_user_tasks(current_user_id):
     FROM 
         task_task tasks                
     WHERE
-        tasks.owner_id = %(current_user)s or tasks.executor_id = %(current_user)s                
+        (tasks.owner_id = %(current_user)s or tasks.executor_id = %(current_user)s)
+        AND tasks.status_id in (1,2)                
 
     UNION ALL
 
@@ -147,8 +148,9 @@ def get_user_tasks(current_user_id):
         task_task_members task_members,
         task_task tasks               
     WHERE
-        task_members.task_id = tasks.id                
-        AND task_members.user_id = %(current_user)s) as all_tasks_user  
+        task_members.task_id = tasks.id
+        AND task_members.user_id = %(current_user)s
+        AND tasks.status_id in (1,2)) as all_tasks_user
 
     GROUP by
         all_tasks_user.id              

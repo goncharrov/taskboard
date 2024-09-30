@@ -400,9 +400,11 @@ def get_tasks(request):
         selection_form.fields['executor'].queryset = users_qs
         selection_form.fields['project'].queryset = form_selections.get_user_projects(request.user.id, None)
 
+        print(users_qs)
+
         # Заполним список задач
         if user_right.is_full:
-            all_tasks_qs = Task.objects.all().order_by('-created_at')
+            all_tasks_qs = Task.objects.filter(status__pk__in = [1,2]).order_by('-created_at')
             tasks_table = task_filters.get_tasks_seriales_data(tasks, all_tasks_qs, "task", request.user.id)
         else:
             all_tasks_qs = task_filters.get_user_tasks(request.user.id)
@@ -731,7 +733,10 @@ def get_task_chat(request, pk):
         task_item = get_object_or_404(Task, pk=pk)
         result = task_disputes.get_task_dispute(pk)
 
-        task_filters.clean_task_count_messages(current_task, request.user)
+        task_filters.clean_task_count_messages(current_task, current_user)
+
+        if current_task.created_at >= datetime.datetime(2024, 9, 30, 0, 0, 0):
+            task_disputes.note_task_dispute_reader(current_task, current_user)
 
         return render(request, 'task/task_chat.html', {'dispute': result['dispute'], 'task_item': task_item, 'message_quantity': result['message_quantity'], 'user_id': current_user.id, 'is_task_closed': is_task_closed})
     

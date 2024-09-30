@@ -109,13 +109,13 @@
             <h1 class="h4">Задачи</h1>
             <div class="btn-toolbar md-0 taskboard_btn_toolbar">
               <a class="btn btn-sm btn-outline-primary me-2" href="{% url 'add_task' %}" role="button" >Создать задачу</a>
-              <div class="btn-group">
-                <button type="button" class="btn btn-sm btn-outline-secondary" id="id_apply_active">
+              <div class="btn-group">                
+                <button type="button" class="btn btn-sm btn-outline-secondary active" id="id_apply_active">
                   Активные
                 </button>
                 <button type="button" class="btn btn-sm btn-outline-secondary" id="id_apply_completed">
                   Завершенные
-                </button>
+                </button>                
               </div>
               <div class="dropdown ms-2 taskboard_menu_period">
                 <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" id="id_button_period">
@@ -181,7 +181,7 @@
     </div>
 
     <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
-    <script src="{% static 'js/task_list_form.js' %}?ver=1.1.6"></script>
+    <script src="{% static 'js/task_list_form.js' %}?ver=1.1.7"></script>
 
   </body>
 </html>
