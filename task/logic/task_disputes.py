@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 from task.models import TaskDispute, TaskMessageReaders
 
 
@@ -19,13 +20,21 @@ def format_data(this_data) -> str:
 # Получим пользователей, прочитавших сообщение
 def get_message_readers(message_id) -> dict:
 
-    readers_qs = TaskMessageReaders.objects.filter(message__pk=message_id).order_by('reader__last_name')
+    readers_qs = TaskMessageReaders.objects.filter(message__pk=message_id).order_by('reading_time')
 
     readers: str = ''
     for reader_qs in readers_qs:
         if readers != '':
             readers += ' \n'
-        readers += get_user_name(reader_qs.reader)
+
+        reader: str = get_user_name(reader_qs.reader)
+        if reader_qs.reading_time is not None:
+            reader += ' ' + reader_qs.reading_time.strftime("%d.%m.%y %H:%M")
+
+        readers += reader
+
+        # readers += get_user_name(reader_qs.reader)
+        # print(reader_qs.reading_time)
 
     return {'readers': readers, 'read_numbers': readers_qs.count()}
 
@@ -40,7 +49,7 @@ def get_task_dispute(pk) -> dict:
     for message_qs in dispute_qs:
 
         message_readers: dict = get_message_readers(message_qs.id)
-        print(message_readers['readers'])
+        # print(message_readers['readers'])
 
         is_image = False
         file_name = ''
@@ -127,5 +136,5 @@ def note_task_dispute_reader(task, user):
 
             current_reader = TaskMessageReaders.objects.filter(message=message_qs, reader=user).first()
             if current_reader is None:
-                TaskMessageReaders.objects.create(message=message_qs, reader=user)
+                TaskMessageReaders.objects.create(message=message_qs, reader=user, reading_time = datetime.now())
                 

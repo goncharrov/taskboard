@@ -477,7 +477,9 @@ def add_new_task(request):
                 project = form.cleaned_data['project']
                 finish_date = form.cleaned_data['finish_date']
 
-                title = title.capitalize()
+                title = title.replace('_', ' ')
+                title = title.replace('  ', ' ')
+                title = title[0].upper() + title[1:]
 
                 task = Task.objects.create(title=title, description=description, workspace=workspace, department=department, executor=executor, project=project, owner=owner, status=status, finish_date=finish_date)
 

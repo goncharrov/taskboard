@@ -273,6 +273,7 @@ class UnauthorizedAccessAttempts(models.Model):
 class TaskMessageReaders(models.Model):
     message = models.ForeignKey(TaskDispute, related_name='related_task_message_reader', on_delete=models.CASCADE, verbose_name='Сообщение')
     reader = models.ForeignKey(User, related_name='related_task_message_reader', on_delete=models.CASCADE, verbose_name='Читатель')
+    reading_time = models.DateTimeField(blank=True, null=True, verbose_name='Время прочтения')
 
     class Meta:
         db_table = 'task_message_readers'

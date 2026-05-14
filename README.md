@@ -20,25 +20,37 @@ pip install -r requirements.txt
 
 Список задач
 
-![Screen|800x425](https://ruproject.org/media/files/2024/05/07/ExampleOfTask_List.jpg)
+<!-- ![Screen|800x425](https://ruproject.org/media/files/2024/05/07/ExampleOfTask_List.jpg) -->
+
+<image src="/.images/ExampleOfTaskList.jpg" width="800" height="425" alt="">
 
 Создание новой задачи
 
-![Screen|800x425](https://ruproject.org/media/files/2024/05/07/ExampleOfCreatingNewTask.jpg)
+<!-- ![Screen|800x425](https://ruproject.org/media/files/2024/05/07/ExampleOfCreatingNewTask.jpg) -->
+
+<image src="/.images/ExampleOfCreatingNewTask.jpg" width="800" height="425" alt="">
 
 Созданная задача
 
-![Screen|800x425](https://ruproject.org/media/files/2024/05/07/ExampleOfCreatedTask.jpg)
+<!-- ![Screen|800x425](https://ruproject.org/media/files/2024/05/07/ExampleOfCreatedTask.jpg) -->
+
+<image src="/.images/ExampleOfCreatedTask.jpg" width="800" height="425" alt="">
 
 Обсуждение задачи
 
-![Screen|800x425](https://ruproject.org/media/files/2024/05/07/ExampleDiscussionTasks.jpg)
+<!-- ![Screen|800x425](https://ruproject.org/media/files/2024/05/07/ExampleDiscussionTasks.jpg) -->
+
+<image src="/.images/ExampleDiscussionTasks.jpg" width="800" height="425" alt="">
 
 Список проектов
 
-![Screen|800x425](https://ruproject.org/media/files/2024/05/07/ExampleOfProjectList.jpg)
+<!-- ![Screen|800x425](https://ruproject.org/media/files/2024/05/07/ExampleOfProjectList.jpg) -->
+
+<image src="/.images/ExampleOfProjectList.jpg" width="800" height="425" alt="">
 
 ## Справочно
 Для корректной работы текстового редактора "CKeditor" с файлами у пользователей в правах доступа должен быть включен "Статус персонала"
 
-![Screen|700x241](https://ruproject.org/media/files/2024/05/07/PersonnelStatus.jpg)
+<!-- ![Screen|700x241](https://ruproject.org/media/files/2024/05/07/PersonnelStatus.jpg) -->
+
+<image src="/.images/PersonnelStatus.jpg" width="800" height="425" alt="">

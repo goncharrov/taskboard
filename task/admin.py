@@ -102,3 +102,9 @@ class UnauthorizedAccessAttemptsAdmin(admin.ModelAdmin):
     list_display: tuple = ('event_date', 'user', 'url')
     list_display_links: tuple = ('event_date',)
     list_filter: tuple = ('user',)
+
+@admin.register(models.TaskMessageReaders)
+class TaskMessageReadersAdmin(admin.ModelAdmin):
+    list_display: tuple = ('message', 'reader', 'reading_time')
+    list_display_links: tuple = ('message',)
+    list_filter: tuple = ('message',)

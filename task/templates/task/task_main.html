@@ -199,7 +199,7 @@
                             class="form-control form-control-sm taskboard_form-fields"
                             id="id_project"
                             {% if task_item.project %}
-                            value="{{ task_item.project|truncatewords_html:6|safe }}"
+                            value="{{ task_item.project.title|truncatewords:6 }}"
                             title="{{ task_item.project.title }}"
                             {% endif %}
                             disabled
